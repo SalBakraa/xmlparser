@@ -15,12 +15,21 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+use std::env;
+
 fn main() {
     let exit_code = real_main();
     std::process::exit(exit_code);
 }
 
 fn real_main() -> i32 {
+    let args: Vec<String> = env::args().collect();
+
+    if args.len() < 2 {
+        println!("No arguments have been supplied");
+        return 1;
+    }
+
     println!("Hello, world!");
     0
 }
