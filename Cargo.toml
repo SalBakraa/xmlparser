@@ -7,3 +7,6 @@ repository = 'https://github.com/SalBakraa/xmlparser'
 license = 'GPL-3.0-or-later'
 
 [dependencies]
+
+[build-dependencies]
+bindgen = "0.59.1"
