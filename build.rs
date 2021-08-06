@@ -11,6 +11,10 @@ fn main() {
     println!("cargo:rerun-if-changed=src/headers/libxml2.h");
 
     let bindings = bindgen::Builder::default()
+        // Use types defined in core
+        .use_core()
+        // Use cty as the prefix of raw types
+        .ctypes_prefix("cty")
         // Set include paths
         .clang_arg("-I/usr/include/libxml2")
         // The input header we would like to generate bindings for.
