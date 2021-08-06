@@ -30,6 +30,7 @@ fn real_main() -> i32 {
         return 1;
     }
 
+    xmlparser::print_nodes(&args[1]);
     println!("Hello, world!");
     0
 }
