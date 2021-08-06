@@ -30,13 +30,25 @@ use std::ptr::{ null, null_mut };
 
 use cty::*;
 
+struct ParserData {
+    result: u32,
+    state: ParserState,
+}
+
+enum ParserState {
+    INITIAL,
+    START,
+}
+
 pub fn print_nodes(file: &String) {
     let file = CString::new(file.clone()).unwrap();
 
     let mut handler = default_sax_handler();
     init_sax_handler(&mut handler);
 
-    unsafe { xmlSAXUserParseFile(&mut handler, null_mut::<c_void>(), file.into_raw()); }
+    let mut data = ParserData { result: 0, state: ParserState::INITIAL };
+    let data_ptr = &mut data as *mut _ as *mut c_void;
+    unsafe { xmlSAXUserParseFile(&mut handler, data_ptr, file.into_raw()); }
 }
 
 fn default_sax_handler() -> xmlSAXHandler {
@@ -85,4 +97,13 @@ fn init_sax_handler(sax: xmlSAXHandlerPtr) {
 
 extern fn sax_start_document(user_data_ptr: *mut c_void) {
     println!("Started parsing :]");
+
+    if user_data_ptr.is_null() {
+        return;
+    }
+
+    let user_data_ptr = user_data_ptr as *mut ParserData;
+    let mut user_data = unsafe { &mut *user_data_ptr };
+
+    (*user_data).state = ParserState::START;
 }
