@@ -83,6 +83,6 @@ fn init_sax_handler(sax: xmlSAXHandlerPtr) {
     }
 }
 
-extern fn sax_start_document(userData: *mut c_void) {
+extern fn sax_start_document(user_data_ptr: *mut c_void) {
     println!("Started parsing :]");
 }
