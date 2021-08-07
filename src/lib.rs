@@ -35,6 +35,15 @@ struct ParserData {
     state: ParserState,
 }
 
+impl ParserData {
+    fn new() -> ParserData {
+        ParserData {
+            result: 0,
+            state: ParserState::INITIAL,
+        }
+    }
+}
+
 enum ParserState {
     INITIAL,
     START,
@@ -46,7 +55,7 @@ pub fn print_nodes(file: &String) {
     let mut handler = default_sax_handler();
     init_sax_handler(&mut handler);
 
-    let mut data = ParserData { result: 0, state: ParserState::INITIAL };
+    let mut data = ParserData::new();
     let data_ptr = &mut data as *mut _ as *mut c_void;
     unsafe { xmlSAXUserParseFile(&mut handler, data_ptr, file.into_raw()); }
 }
