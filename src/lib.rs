@@ -104,6 +104,7 @@ fn init_sax_handler(sax: xmlSAXHandlerPtr) {
         (*sax).startDocument = Some(sax_start_document);
         (*sax).startElement = Some(sax_start_element);
         (*sax).endElement = Some(sax_end_element);
+        (*sax).characters = Some(sax_characters);
         (*sax).initialized = 1;
     }
 }
@@ -148,6 +149,30 @@ extern fn sax_end_element(user_data_ptr: *mut c_void, name: *const xmlChar) {
     let name = string_from_xmlchar_with_null(name);
     (*user_data).path = (*user_data).path.strip_suffix(&format!("/{}", name))
                                          .unwrap_or(&(*user_data).path).to_string();
+}
+
+extern fn sax_characters(user_data_ptr: *mut c_void, chars: *const xmlChar, len: i32) {
+    let mut user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
+    let chars = string_from_xmlchar(chars, len as isize);
+    if chars.trim().is_empty() {
+        return;
+    }
+
+    println!("{}=\"{}\"", (*user_data).path, chars);
+}
+
+fn string_from_xmlchar(chars: *const xmlChar, len: isize) -> String {
+    if len < 0 {
+        panic!("Length must be positive.")
+    }
+
+    let len = len as usize;
+    let mut container = vec![b'\0'; len];
+    for i in 0..len {
+        container[i] = unsafe { *(chars.add(i)) };
+    }
+
+    String::from_utf8(container).unwrap()
 }
 
 fn string_from_xmlchar_with_null(chars: *const xmlChar) -> String {
