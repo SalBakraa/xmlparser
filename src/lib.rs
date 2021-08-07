@@ -102,8 +102,12 @@ extern fn sax_start_document(user_data_ptr: *mut c_void) {
         return;
     }
 
-    let user_data_ptr = user_data_ptr as *mut ParserData;
-    let mut user_data = unsafe { &mut *user_data_ptr };
+    let mut user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
 
     (*user_data).state = ParserState::START;
+}
+
+fn deref_mut_void_ptr<'a, T>(ptr: *mut c_void) -> &'a mut T {
+    let ptr = ptr as *mut T;
+    unsafe { &mut *ptr }
 }
