@@ -33,6 +33,7 @@ use cty::*;
 struct ParserData {
     result: u32,
     state: ParserState,
+    path: String,
 }
 
 impl ParserData {
@@ -40,6 +41,7 @@ impl ParserData {
         ParserData {
             result: 0,
             state: ParserState::INITIAL,
+            path: String::new()
         }
     }
 }
@@ -100,6 +102,8 @@ fn default_sax_handler() -> xmlSAXHandler {
 fn init_sax_handler(sax: xmlSAXHandlerPtr) {
     unsafe {
         (*sax).startDocument = Some(sax_start_document);
+        (*sax).startElement = Some(sax_start_element);
+        (*sax).endElement = Some(sax_end_element);
         (*sax).initialized = 1;
     }
 }
@@ -112,11 +116,69 @@ extern fn sax_start_document(user_data_ptr: *mut c_void) {
     }
 
     let mut user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
-
     (*user_data).state = ParserState::START;
 }
 
 fn deref_mut_void_ptr<'a, T>(ptr: *mut c_void) -> &'a mut T {
     let ptr = ptr as *mut T;
     unsafe { &mut *ptr }
+}
+
+extern fn sax_start_element(user_data_ptr: *mut c_void, name: *const xmlChar, attrs: *mut *const xmlChar) {
+    let mut user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
+
+    let name = string_from_xmlchar_with_null(name);
+    (*user_data).path = format!("{}/{}", (*user_data).path, name);
+
+    let attrs = vec_from_ptr_with_null(attrs);
+    if attrs.is_empty() {
+        println!("{}", (*user_data).path);
+        return;
+    }
+
+    let attrs: Vec<String> = attrs.iter().map(|e| string_from_xmlchar_with_null(*e)).collect();
+    let attrs: Vec<String> = attrs.chunks(2).map(|c| format!("{}=\"{}\"", c[0], c[1])).collect();
+    let attrs = attrs.join(",");
+
+    println!("{}@[{}]", (*user_data).path, attrs);
+}
+
+extern fn sax_end_element(user_data_ptr: *mut c_void, name: *const xmlChar) {
+    let mut user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
+    let name = string_from_xmlchar_with_null(name);
+    (*user_data).path = (*user_data).path.strip_suffix(&format!("/{}", name))
+                                         .unwrap_or(&(*user_data).path).to_string();
+}
+
+fn string_from_xmlchar_with_null(chars: *const xmlChar) -> String {
+    let mut container = Vec::new();
+    if chars.is_null() {
+        return String::from_utf8(container).unwrap();
+    }
+
+    unsafe {
+        let mut i = 0;
+        while *(chars.offset(i)) != b'\0' {
+            container.push(*(chars.offset(i)));
+            i += 1;
+        }
+    }
+
+    String::from_utf8(container).unwrap()
+}
+
+fn vec_from_ptr_with_null(ptr: *mut *const xmlChar) -> Vec<*const xmlChar> {
+    let mut container = Vec::new();
+    if ptr.is_null() {
+        return container;
+    }
+
+    unsafe {
+        let mut i = 0;
+        while !(*ptr.add(i)).is_null() {
+            container.push(*ptr.add(i));
+            i += 1;
+        }
+        container
+    }
 }
