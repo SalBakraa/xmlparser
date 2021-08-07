@@ -30,6 +30,14 @@ use std::ptr::{ null, null_mut };
 
 use cty::*;
 
+use phf::{ phf_map, Map };
+
+static WHITESPACE_MAP: Map<char, char> = phf_map! {
+    ' ' => '␣',
+    '\t' => '→',
+    '\n' => '↵',
+};
+
 struct ParserData {
     result: u32,
     state: ParserState,
@@ -158,7 +166,19 @@ extern fn sax_characters(user_data_ptr: *mut c_void, chars: *const xmlChar, len:
         return;
     }
 
+    let chars = translate_whitespace(chars);
     println!("{}=\"{}\"", (*user_data).path, chars);
+}
+
+fn translate_whitespace(string: String) -> String {
+    let mut container = String::with_capacity(string.len());
+    for c in string.chars() {
+        match WHITESPACE_MAP.get(&c) {
+            Some(rep) => container.push(*rep),
+            None => container.push(c),
+        }
+    }
+    container
 }
 
 fn string_from_xmlchar(chars: *const xmlChar, len: isize) -> String {
