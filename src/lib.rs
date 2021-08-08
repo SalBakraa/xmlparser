@@ -40,7 +40,6 @@ static WHITESPACE_MAP: Map<char, char> = phf_map! {
 
 struct ParserData {
     result: u32,
-    state: ParserState,
     path: PathNode
 }
 
@@ -56,7 +55,6 @@ impl ParserData {
     fn new() -> ParserData {
         ParserData {
             result: 0,
-            state: ParserState::INITIAL,
             path: PathNode::new()
         }
     }
@@ -131,11 +129,6 @@ impl std::fmt::Display for PathNode {
     }
 }
 
-enum ParserState {
-    INITIAL,
-    START,
-}
-
 pub fn print_nodes(file: &String) {
     let file = CString::new(file.clone()).unwrap();
 
@@ -194,15 +187,8 @@ fn init_sax_handler(sax: xmlSAXHandlerPtr) {
     }
 }
 
-extern fn sax_start_document(user_data_ptr: *mut c_void) {
+extern fn sax_start_document(_user_data_ptr: *mut c_void) {
     println!("Started parsing :]");
-
-    if user_data_ptr.is_null() {
-        return;
-    }
-
-    let mut user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
-    (*user_data).state = ParserState::START;
 }
 
 fn deref_mut_void_ptr<'a, T>(ptr: *mut c_void) -> &'a mut T {
