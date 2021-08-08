@@ -44,6 +44,14 @@ struct ParserData {
     path: String,
 }
 
+struct PathNode {
+    child: NodeLink,
+    name: String,
+    printed: bool,
+}
+
+type NodeLink = Option<Box<PathNode>>;
+
 impl ParserData {
     fn new() -> ParserData {
         ParserData {
@@ -53,6 +61,47 @@ impl ParserData {
         }
     }
 }
+
+impl PathNode {
+    fn new() -> PathNode {
+        PathNode {
+            child: None,
+            name: String::new(),
+            printed: false
+        }
+    }
+
+    fn from(child: Option<Box<PathNode>>, name: String, printed: bool) -> PathNode {
+        PathNode { child, name, printed }
+    }
+
+    fn child(&self) -> &PathNode {
+        &*(self.child.as_ref().unwrap())
+    }
+
+    fn child_mut(&mut self) -> &mut PathNode {
+        &mut *(self.child.as_mut().unwrap())
+    }
+
+    fn set_printed(&mut self, val: bool) {
+        self.printed = val;
+    }
+
+    fn set_child(&mut self, val: PathNode) {
+        self.child = Some(Box::new(val));
+    }
+}
+
+impl std::fmt::Display for PathNode {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        if self.child.is_some() {
+            write!(f, "{}/{}", self.name, *(self.child.as_ref().unwrap()))
+        } else {
+            write!(f, "{}", self.name)
+        }
+    }
+}
+
 
 enum ParserState {
     INITIAL,
