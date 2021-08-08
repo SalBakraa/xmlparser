@@ -253,7 +253,7 @@ extern fn sax_characters(user_data_ptr: *mut c_void, chars: *const xmlChar, len:
         return;
     }
 
-    let chars = translate_whitespace(chars);
+    let chars = translate_whitespace(chars).replace("␣␣␣␣","·");
     println!("{}=\"{}\"", (*user_data).path, chars);
 
     (*user_data).last_path_node_mut().set_printed(true);
