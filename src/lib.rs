@@ -41,8 +41,7 @@ static WHITESPACE_MAP: Map<char, char> = phf_map! {
 struct ParserData {
     result: u32,
     state: ParserState,
-    path: String,
-    temp_path: PathNode
+    path: PathNode
 }
 
 struct PathNode {
@@ -58,19 +57,18 @@ impl ParserData {
         ParserData {
             result: 0,
             state: ParserState::INITIAL,
-            path: String::new(),
-            temp_path: PathNode::new()
+            path: PathNode::new()
         }
     }
 
     fn last_path_node(&self) -> &PathNode {
-        let mut temp = &self.temp_path;
+        let mut temp = &self.path;
         while temp.child.is_some() { temp = temp.child(); }
         temp
     }
 
     fn last_path_node_mut(&mut self) -> &mut PathNode {
-        let mut temp = &mut self.temp_path;
+        let mut temp = &mut self.path;
         while temp.child.is_some() { temp = temp.child_mut(); }
         temp
     }
@@ -80,7 +78,7 @@ impl ParserData {
     }
 
     fn remove_last_path_node(&mut self) -> PathNode {
-        let mut parent = &mut self.temp_path;
+        let mut parent = &mut self.path;
         while parent.child.is_some() {
             if !parent.child().child.is_some() { break; }
             parent = parent.child_mut();
@@ -215,25 +213,6 @@ fn deref_mut_void_ptr<'a, T>(ptr: *mut c_void) -> &'a mut T {
 extern fn sax_start_element(user_data_ptr: *mut c_void, name: *const xmlChar, attrs: *mut *const xmlChar) {
     let mut user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
 
-    let name = string_from_xmlchar_with_null(name);
-    (*user_data).path = format!("{}/{}", (*user_data).path, name);
-
-    let attrs = vec_from_ptr_with_null(attrs);
-    if attrs.is_empty() {
-        println!("{}", (*user_data).path);
-        return;
-    }
-
-    let attrs: Vec<String> = attrs.iter().map(|e| string_from_xmlchar_with_null(*e)).collect();
-    let attrs: Vec<String> = attrs.chunks(2).map(|c| format!("{}=\"{}\"", c[0], c[1])).collect();
-    let attrs = attrs.join(",");
-
-    println!("{}@[{}]", (*user_data).path, attrs);
-}
-
-extern fn sax_start_element_new(user_data_ptr: *mut c_void, name: *const xmlChar, attrs: *mut *const xmlChar) {
-    let mut user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
-
     let parent = (*user_data).last_path_node();
     if !parent.printed {
         println!("{}", (*user_data).path);
@@ -258,13 +237,6 @@ extern fn sax_start_element_new(user_data_ptr: *mut c_void, name: *const xmlChar
 
 extern fn sax_end_element(user_data_ptr: *mut c_void, name: *const xmlChar) {
     let mut user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
-    let name = string_from_xmlchar_with_null(name);
-    (*user_data).path = (*user_data).path.strip_suffix(&format!("/{}", name))
-                                         .unwrap_or(&(*user_data).path).to_string();
-}
-
-extern fn sax_end_element_new(user_data_ptr: *mut c_void, name: *const xmlChar) {
-    let mut user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
 
     let parent = (*user_data).last_path_node();
     if !parent.printed {
@@ -275,17 +247,6 @@ extern fn sax_end_element_new(user_data_ptr: *mut c_void, name: *const xmlChar) 
 }
 
 extern fn sax_characters(user_data_ptr: *mut c_void, chars: *const xmlChar, len: i32) {
-    let mut user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
-    let chars = string_from_xmlchar(chars, len as isize);
-    if chars.trim().is_empty() {
-        return;
-    }
-
-    let chars = translate_whitespace(chars);
-    println!("{}=\"{}\"", (*user_data).path, chars);
-}
-
-extern fn sax_characters_new(user_data_ptr: *mut c_void, chars: *const xmlChar, len: i32) {
     let user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
     let chars = string_from_xmlchar(chars, len as isize);
     if chars.trim().is_empty() {
