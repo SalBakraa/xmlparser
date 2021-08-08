@@ -42,6 +42,7 @@ struct ParserData {
     result: u32,
     state: ParserState,
     path: String,
+    temp_path: PathNode
 }
 
 struct PathNode {
@@ -57,7 +58,8 @@ impl ParserData {
         ParserData {
             result: 0,
             state: ParserState::INITIAL,
-            path: String::new()
+            path: String::new(),
+            temp_path: PathNode::new()
         }
     }
 }
