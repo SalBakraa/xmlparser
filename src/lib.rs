@@ -78,6 +78,19 @@ impl ParserData {
     fn set_last_path_node(&mut self, node: PathNode) {
         self.last_path_node_mut().set_child(node);
     }
+
+    fn remove_last_path_node(&mut self) -> PathNode {
+        let mut parent = &mut self.temp_path;
+        while parent.child.is_some() {
+            if !parent.child().child.is_some() { break; }
+            parent = parent.child_mut();
+        }
+
+        let mut removedNode: NodeLink = None;
+        std::mem::swap(&mut parent.child, &mut removedNode);
+
+        return *removedNode.unwrap();
+    }
 }
 
 impl PathNode {
@@ -248,6 +261,17 @@ extern fn sax_end_element(user_data_ptr: *mut c_void, name: *const xmlChar) {
     let name = string_from_xmlchar_with_null(name);
     (*user_data).path = (*user_data).path.strip_suffix(&format!("/{}", name))
                                          .unwrap_or(&(*user_data).path).to_string();
+}
+
+extern fn sax_end_element_new(user_data_ptr: *mut c_void, name: *const xmlChar) {
+    let mut user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
+
+    let parent = (*user_data).last_path_node();
+    if !parent.printed {
+        println!("{}", (*user_data).path);
+    }
+
+    (*user_data).remove_last_path_node();
 }
 
 extern fn sax_characters(user_data_ptr: *mut c_void, chars: *const xmlChar, len: i32) {
