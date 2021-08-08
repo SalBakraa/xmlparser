@@ -38,6 +38,8 @@ static WHITESPACE_MAP: Map<char, char> = phf_map! {
     '\n' => '↵',
 };
 
+static COMPRESSED_WHITESPACE: &str = "·";
+
 struct ParserData {
     result: u32,
     path: PathNode
@@ -244,7 +246,7 @@ extern fn sax_characters(user_data_ptr: *mut c_void, chars: *const xmlChar, len:
         return;
     }
 
-    let chars = translate_whitespace(chars).replace("␣␣␣␣","·");
+    let chars = translate_whitespace(chars).replace("␣␣␣␣", COMPRESSED_WHITESPACE);
     println!("{}=\"{}\"", (*user_data).path, chars);
 
     (*user_data).last_path_node_mut().set_printed(true);
