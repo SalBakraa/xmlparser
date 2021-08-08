@@ -224,8 +224,8 @@ extern fn sax_start_element(user_data_ptr: *mut c_void, name: *const xmlChar, at
 extern fn sax_end_element(user_data_ptr: *mut c_void, name: *const xmlChar) {
     let user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
 
-    let parent = (*user_data).last_path_node();
-    if !parent.printed {
+    let last = (*user_data).last_path_node();
+    if !last.printed {
         println!("{}", (*user_data).path);
     }
 
