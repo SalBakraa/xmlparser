@@ -62,6 +62,22 @@ impl ParserData {
             temp_path: PathNode::new()
         }
     }
+
+    fn last_path_node(&self) -> &PathNode {
+        let mut temp = &self.temp_path;
+        while temp.child.is_some() { temp = temp.child(); }
+        temp
+    }
+
+    fn last_path_node_mut(&mut self) -> &mut PathNode {
+        let mut temp = &mut self.temp_path;
+        while temp.child.is_some() { temp = temp.child_mut(); }
+        temp
+    }
+
+    fn set_last_path_node(&mut self, node: PathNode) {
+        self.last_path_node_mut().set_child(node);
+    }
 }
 
 impl PathNode {
@@ -103,7 +119,6 @@ impl std::fmt::Display for PathNode {
         }
     }
 }
-
 
 enum ParserState {
     INITIAL,
@@ -201,6 +216,31 @@ extern fn sax_start_element(user_data_ptr: *mut c_void, name: *const xmlChar, at
     let attrs = attrs.join(",");
 
     println!("{}@[{}]", (*user_data).path, attrs);
+}
+
+extern fn sax_start_element_new(user_data_ptr: *mut c_void, name: *const xmlChar, attrs: *mut *const xmlChar) {
+    let mut user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
+
+    let parent = (*user_data).last_path_node();
+    if !parent.printed {
+        println!("{}", (*user_data).path);
+        (*user_data).last_path_node_mut().set_printed(true);
+    }
+
+    let name = string_from_xmlchar_with_null(name);
+    (*user_data).set_last_path_node(PathNode::from(None, name, false));
+
+    let attrs = vec_from_ptr_with_null(attrs);
+    if attrs.is_empty() {
+        return;
+    }
+
+    let attrs: Vec<String> = attrs.iter().map(|e| string_from_xmlchar_with_null(*e)).collect();
+    let attrs: Vec<String> = attrs.chunks(2).map(|c| format!("{}=\"{}\"", c[0], c[1])).collect();
+    let attrs = attrs.join(",");
+
+    println!("{}@[{}]", (*user_data).path, attrs);
+    (*user_data).last_path_node_mut().set_printed(true);
 }
 
 extern fn sax_end_element(user_data_ptr: *mut c_void, name: *const xmlChar) {
