@@ -285,6 +285,19 @@ extern fn sax_characters(user_data_ptr: *mut c_void, chars: *const xmlChar, len:
     println!("{}=\"{}\"", (*user_data).path, chars);
 }
 
+extern fn sax_characters_new(user_data_ptr: *mut c_void, chars: *const xmlChar, len: i32) {
+    let user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
+    let chars = string_from_xmlchar(chars, len as isize);
+    if chars.trim().is_empty() {
+        return;
+    }
+
+    let chars = translate_whitespace(chars);
+    println!("{}=\"{}\"", (*user_data).path, chars);
+
+    (*user_data).last_path_node_mut().set_printed(true);
+}
+
 fn translate_whitespace(string: String) -> String {
     let mut container = String::with_capacity(string.len());
     for c in string.chars() {
