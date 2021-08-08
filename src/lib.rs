@@ -223,8 +223,13 @@ extern fn sax_start_element(user_data_ptr: *mut c_void, name: *const xmlChar, at
 
 extern fn sax_end_element(user_data_ptr: *mut c_void, name: *const xmlChar) {
     let user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
+    let name = string_from_xmlchar_with_null(name);
 
     let last = (*user_data).last_path_node();
+    if last.name != name {
+        return
+    }
+
     if !last.printed {
         println!("{}", (*user_data).path);
     }
