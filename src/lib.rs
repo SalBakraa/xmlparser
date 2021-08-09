@@ -186,6 +186,7 @@ fn init_sax_handler(sax: xmlSAXHandlerPtr) {
         (*sax).startElement = Some(sax_start_element);
         (*sax).endElement = Some(sax_end_element);
         (*sax).characters = Some(sax_characters);
+        (*sax).processingInstruction = Some(sax_processing_instruction);
         (*sax).initialized = 1;
     }
 }
@@ -250,6 +251,14 @@ extern fn sax_characters(user_data_ptr: *mut c_void, chars: *const xmlChar, len:
     println!("{}=\"{}\"", (*user_data).path, chars);
 
     (*user_data).last_path_node_mut().set_printed(true);
+}
+
+extern fn sax_processing_instruction(user_data_ptr: *mut c_void, target: *const xmlChar, data: *const xmlChar) {
+    let user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
+    let target = string_from_xmlchar_with_null(target);
+    let data = string_from_xmlchar_with_null(data);
+
+    println!("{}/{}?[{}]", (*user_data).path, target, data);
 }
 
 fn string_from_xmlchar(chars: *const xmlChar, len: isize) -> String {
