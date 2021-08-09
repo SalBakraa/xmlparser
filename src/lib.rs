@@ -182,17 +182,13 @@ fn default_sax_handler() -> xmlSAXHandler {
 
 fn init_sax_handler(sax: xmlSAXHandlerPtr) {
     unsafe {
-        (*sax).startDocument = Some(sax_start_document);
         (*sax).startElement = Some(sax_start_element);
         (*sax).endElement = Some(sax_end_element);
         (*sax).characters = Some(sax_characters);
         (*sax).processingInstruction = Some(sax_processing_instruction);
+        (*sax).comment = Some(sax_comment);
         (*sax).initialized = 1;
     }
-}
-
-extern fn sax_start_document(_user_data_ptr: *mut c_void) {
-    println!("Started parsing :]");
 }
 
 fn deref_mut_void_ptr<'a, T>(ptr: *mut c_void) -> &'a mut T {
@@ -259,6 +255,12 @@ extern fn sax_processing_instruction(user_data_ptr: *mut c_void, target: *const 
     let data = string_from_xmlchar_with_null(data);
 
     println!("{}/{}?[{}]", (*user_data).path, target, data);
+}
+
+extern fn sax_comment(user_data_ptr: *mut c_void, comment: *const xmlChar) {
+    let user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
+    let comment = string_from_xmlchar_with_null(comment);
+    println!("{}/![{}]", (*user_data).path, comment);
 }
 
 fn string_from_xmlchar(chars: *const xmlChar, len: isize) -> String {
