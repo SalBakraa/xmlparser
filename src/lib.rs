@@ -246,7 +246,7 @@ extern fn sax_characters(user_data_ptr: *mut c_void, chars: *const xmlChar, len:
         return;
     }
 
-    let chars = translate_whitespace(chars).replace("␣␣␣␣", COMPRESSED_WHITESPACE);
+    let chars = translate_whitespace(chars);
     println!("{}=\"{}\"", (*user_data).path, chars);
 
     (*user_data).last_path_node_mut().set_printed(true);
@@ -260,7 +260,7 @@ fn translate_whitespace(string: String) -> String {
             None => container.push(c),
         }
     }
-    container
+    container.replace("␣␣␣␣", COMPRESSED_WHITESPACE)
 }
 
 fn string_from_xmlchar(chars: *const xmlChar, len: isize) -> String {
