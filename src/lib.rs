@@ -26,7 +26,7 @@
 include!(concat!(env!("OUT_DIR"), "/parser.rs"));
 
 use std::ffi::CString;
-use std::ptr::{ null, null_mut };
+use std::ptr::null_mut;
 use std::iter::FromIterator;
 
 use cty::*;
