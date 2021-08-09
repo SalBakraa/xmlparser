@@ -25,6 +25,8 @@
 
 include!(concat!(env!("OUT_DIR"), "/parser.rs"));
 
+include!(concat!(env!("OUT_DIR"), "/sax_funcs.rs"));
+
 use std::ffi::CString;
 use std::ptr::null_mut;
 use std::iter::FromIterator;
@@ -187,6 +189,9 @@ fn init_sax_handler(sax: xmlSAXHandlerPtr) {
         (*sax).characters = Some(sax_characters);
         (*sax).processingInstruction = Some(sax_processing_instruction);
         (*sax).comment = Some(sax_comment);
+        (*sax).warning = Some(sax_warning);
+        (*sax).error = Some(sax_error);
+        (*sax).fatalError = Some(sax_fatal_error);
         (*sax).initialized = 1;
     }
 }
