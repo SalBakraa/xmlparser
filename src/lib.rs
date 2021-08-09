@@ -27,6 +27,7 @@ include!(concat!(env!("OUT_DIR"), "/parser.rs"));
 
 use std::ffi::CString;
 use std::ptr::{ null, null_mut };
+use std::iter::FromIterator;
 
 use cty::*;
 
@@ -38,7 +39,7 @@ static WHITESPACE_MAP: Map<char, char> = phf_map! {
     '\n' => '↵',
 };
 
-static COMPRESSED_WHITESPACE: &str = "·";
+static COMPRESSED_WHITESPACE: char = '·';
 
 struct ParserData {
     result: u32,
@@ -242,25 +243,13 @@ extern fn sax_end_element(user_data_ptr: *mut c_void, name: *const xmlChar) {
 extern fn sax_characters(user_data_ptr: *mut c_void, chars: *const xmlChar, len: i32) {
     let user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
     let chars = string_from_xmlchar(chars, len as isize);
-    if chars.trim().is_empty() {
+    if is_only_whitespace(&chars) {
         return;
     }
 
-    let chars = translate_whitespace(chars);
     println!("{}=\"{}\"", (*user_data).path, chars);
 
     (*user_data).last_path_node_mut().set_printed(true);
-}
-
-fn translate_whitespace(string: String) -> String {
-    let mut container = String::with_capacity(string.len());
-    for c in string.chars() {
-        match WHITESPACE_MAP.get(&c) {
-            Some(rep) => container.push(*rep),
-            None => container.push(c),
-        }
-    }
-    container.replace("␣␣␣␣", COMPRESSED_WHITESPACE)
 }
 
 fn string_from_xmlchar(chars: *const xmlChar, len: isize) -> String {
@@ -269,29 +258,54 @@ fn string_from_xmlchar(chars: *const xmlChar, len: isize) -> String {
     }
 
     let len = len as usize;
-    let mut container = vec![b'\0'; len];
+    let mut container = vec!['\0'; len];
     for i in 0..len {
-        container[i] = unsafe { *(chars.add(i)) };
+        container[i] = translate_whitespace(unsafe { *(chars.add(i)) } as char);
     }
 
-    String::from_utf8(container).unwrap()
+    compress_whitespace(String::from_iter(container))
 }
 
 fn string_from_xmlchar_with_null(chars: *const xmlChar) -> String {
     let mut container = Vec::new();
     if chars.is_null() {
-        return String::from_utf8(container).unwrap();
+        return String::from_iter(container);
     }
 
     unsafe {
         let mut i = 0;
-        while *(chars.offset(i)) != b'\0' {
-            container.push(*(chars.offset(i)));
+        loop {
+            let c = *(chars.offset(i)) as char;
+            if c == '\0' {
+                break;
+            }
+
+            let c = translate_whitespace(c);
+            container.push(c);
+
             i += 1;
         }
     }
 
-    String::from_utf8(container).unwrap()
+    compress_whitespace(String::from_iter(container))
+}
+
+fn translate_whitespace(c: char) -> char {
+    *WHITESPACE_MAP.get(&c).unwrap_or(&c)
+}
+
+fn compress_whitespace(string: String) -> String {
+    string.replace("␣␣␣␣", &COMPRESSED_WHITESPACE.to_string())
+}
+
+fn is_only_whitespace(string: &String) -> bool {
+    for c in string.chars() {
+        if !WHITESPACE_MAP.values().any(|&val| val == c) && c != COMPRESSED_WHITESPACE {
+            return false;
+        }
+    }
+
+    true
 }
 
 fn vec_from_ptr_with_null(ptr: *mut *const xmlChar) -> Vec<*const xmlChar> {
