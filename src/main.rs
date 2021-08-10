@@ -41,6 +41,11 @@ fn real_main() -> i32 {
         let _ = xmlparser::DO_COMPRESS_WHITESPACE.set(false);
     }
 
+    if let Some(level) = matches.value_of("Compression level") {
+        let level: usize = level.parse().unwrap_or(4);
+        let _ = xmlparser::COMPRESSION_LEVEL.set(level);
+    }
+
     for file in matches.values_of("FILES").unwrap().collect::<Vec<_>>() {
         xmlparser::print_nodes(file.to_owned());
     }
@@ -76,6 +81,16 @@ fn build_cli() -> App<'static, 'static> {
                 .display_order(3)
         )
         .arg(
+            Arg::with_name("Compression level")
+                .short("c")
+                .long("compress-level")
+                .help("Specifies the number consecutive spaces compressed to a \
+                       single character. Default: 4 spaces")
+                .takes_value(true)
+                .allow_hyphen_values(true)
+                .display_order(4)
+        )
+        .arg(
             Arg::with_name("FILES")
                 .required_unless("print whitespace map")
                 .help("XML files to read")
@@ -83,7 +98,7 @@ fn build_cli() -> App<'static, 'static> {
                 .multiple(true)
         )
         .after_help(
-            "EXAMPLES \n\
+            "EXAMPLES: \n\
              \tIf you want to keep visual whitespace while text processing; You can use sed to \n\
              \tremove the visualizations as the last step of text processing. \n\
              \n\

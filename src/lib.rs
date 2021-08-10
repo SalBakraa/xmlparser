@@ -40,6 +40,8 @@ use once_cell::sync::OnceCell;
 pub static DO_MAP_WHITESPACE: OnceCell<bool> = OnceCell::new();
 pub static DO_COMPRESS_WHITESPACE: OnceCell<bool> = OnceCell::new();
 
+pub static COMPRESSION_LEVEL: OnceCell<usize> = OnceCell::new();
+
 static WHITESPACE_MAP: Map<char, char> = phf_map! {
     ' ' => '␣',
     '\t' => '→',
@@ -327,7 +329,9 @@ fn compress_whitespace(string: String) -> String {
     if !DO_COMPRESS_WHITESPACE.get_or_init(|| true) {
         return string;
     }
-    string.replace("␣␣␣␣", &COMPRESSED_WHITESPACE.to_string())
+
+    let compressed_string = "␣".repeat(*COMPRESSION_LEVEL.get_or_init(|| 4));
+    string.replace(&compressed_string, &COMPRESSED_WHITESPACE.to_string())
 }
 
 fn is_only_whitespace(string: &String) -> bool {
