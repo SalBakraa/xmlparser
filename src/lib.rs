@@ -331,6 +331,10 @@ fn compress_whitespace(string: String) -> String {
 }
 
 fn is_only_whitespace(string: &String) -> bool {
+    if string.trim().is_empty() {
+        return true
+    }
+
     for c in string.chars() {
         if !WHITESPACE_MAP.values().any(|&val| val == c) && c != COMPRESSED_WHITESPACE {
             return false;
