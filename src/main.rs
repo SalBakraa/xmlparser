@@ -41,7 +41,7 @@ fn real_main() -> i32 {
         let _ = xmlparser::DO_COMPRESS_WHITESPACE.set(false);
     }
 
-    for file in matches.values_of("FILE").unwrap().collect::<Vec<_>>() {
+    for file in matches.values_of("FILES").unwrap().collect::<Vec<_>>() {
         xmlparser::print_nodes(file.to_owned());
     }
 
@@ -76,9 +76,9 @@ fn build_cli() -> App<'static, 'static> {
                 .display_order(3)
         )
         .arg(
-            Arg::with_name("FILE")
+            Arg::with_name("FILES")
                 .required_unless("print whitespace map")
-                .help("Sets the input xml file to read")
+                .help("XML files to read")
                 .index(1)
                 .multiple(true)
         )
