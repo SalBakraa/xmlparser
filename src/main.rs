@@ -30,6 +30,10 @@ fn real_main() -> i32 {
     let app = build_cli();
     let matches = app.get_matches();
 
+    if matches.is_present("print whitespace map") {
+        xmlparser::print_whitespace_mappings();
+        return 0;
+    }
 
     for file in matches.values_of("FILE").unwrap().collect::<Vec<_>>() {
         xmlparser::print_nodes(file.to_owned());
@@ -45,8 +49,16 @@ fn build_cli() -> App<'static, 'static> {
         .author(crate_authors!())
         .about(crate_description!())
         .arg(
+            Arg::with_name("print whitespace map")
+                .short("p")
+                .long("whitespace-maps")
+                .help("Print the characters used to visualize/compress whitespace \
+                      charcters in following order <SPACE><\\t><\\n>|<COMPRESSOR> and exits")
+                .display_order(1)
+        )
+        .arg(
             Arg::with_name("FILE")
-                .required(true)
+                .required_unless("print whitespace map")
                 .help("Sets the input xml file to read")
                 .index(1)
                 .multiple(true)

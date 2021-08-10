@@ -134,6 +134,11 @@ impl std::fmt::Display for PathNode {
     }
 }
 
+pub fn print_whitespace_mappings() {
+    let map = String::from_iter(WHITESPACE_MAP.values());
+    println!("{}|{}", map, COMPRESSED_WHITESPACE);
+}
+
 pub fn print_nodes(file: String) {
     let file = CString::new(file).unwrap();
 
