@@ -15,9 +15,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#[macro_use]
-extern crate clap;
-
 use clap::{App, Arg};
 use clap::{ crate_name, crate_version, crate_authors, crate_description };
 
