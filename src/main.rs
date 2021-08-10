@@ -33,12 +33,12 @@ fn real_main() -> i32 {
     }
 
     if matches.is_present("No whitespace mapping") {
-        xmlparser::DO_MAP_WHITESPACE.set(false);
-        xmlparser::DO_COMPRESS_WHITESPACE.set(false);
+        let _ = xmlparser::DO_MAP_WHITESPACE.set(false);
+        let _ = xmlparser::DO_COMPRESS_WHITESPACE.set(false);
     }
 
     if matches.is_present("No whitespace compressing") {
-        xmlparser::DO_COMPRESS_WHITESPACE.set(false);
+        let _ = xmlparser::DO_COMPRESS_WHITESPACE.set(false);
     }
 
     for file in matches.values_of("FILE").unwrap().collect::<Vec<_>>() {
