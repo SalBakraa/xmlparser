@@ -50,7 +50,6 @@ fn real_main() -> i32 {
         xmlparser::print_nodes(file.to_owned());
     }
 
-    println!("Hello, world!");
     0
 }
 
