@@ -15,7 +15,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use std::env;
+#[macro_use]
+extern crate clap;
+
+use clap::{App, Arg};
+use clap::{ crate_name, crate_version, crate_authors, crate_description };
 
 fn main() {
     let exit_code = real_main();
@@ -23,14 +27,28 @@ fn main() {
 }
 
 fn real_main() -> i32 {
-    let args: Vec<String> = env::args().collect();
+    let app = build_cli();
+    let matches = app.get_matches();
 
-    if args.len() < 2 {
-        println!("No arguments have been supplied");
-        return 1;
+
+    for file in matches.values_of("FILE").unwrap().collect::<Vec<_>>() {
+        xmlparser::print_nodes(file.to_owned());
     }
 
-    xmlparser::print_nodes(&args[1]);
     println!("Hello, world!");
     0
+}
+
+fn build_cli() -> App<'static, 'static> {
+    App::new(crate_name!())
+        .version(crate_version!())
+        .author(crate_authors!())
+        .about(crate_description!())
+        .arg(
+            Arg::with_name("FILE")
+                .required(true)
+                .help("Sets the input xml file to read")
+                .index(1)
+                .multiple(true)
+        )
 }

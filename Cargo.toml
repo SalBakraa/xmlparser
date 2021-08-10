@@ -1,6 +1,6 @@
 [package]
 name = 'xmlparser'
-version = '0.6.5'
+version = '0.7.0'
 authors = [ "Sal Bakra'a <SalBakraa@gmail.com>" ]
 edition = '2018'
 repository = 'https://github.com/SalBakraa/xmlparser'
@@ -9,6 +9,7 @@ license = 'GPL-3.0-or-later'
 [dependencies]
 cty = "0.2.1"
 phf = { version = "0.9", features = ["macros"] } # For compile time hashmaps
+clap = { version = "2.33.3", default-features = false }
 
 [build-dependencies]
 bindgen = "0.59.1"

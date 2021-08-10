@@ -134,8 +134,8 @@ impl std::fmt::Display for PathNode {
     }
 }
 
-pub fn print_nodes(file: &String) {
-    let file = CString::new(file.clone()).unwrap();
+pub fn print_nodes(file: String) {
+    let file = CString::new(file).unwrap();
 
     let mut handler = default_sax_handler();
     init_sax_handler(&mut handler);
