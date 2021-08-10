@@ -53,7 +53,7 @@ fn build_cli() -> App<'static, 'static> {
                 .short("p")
                 .long("whitespace-maps")
                 .help("Print the characters used to visualize/compress whitespace \
-                      charcters in following order <SPACE><\\t><\\n>|<COMPRESSOR> and exits")
+                      charcters in the following order <SPACE><\\t><\\n>|<COMPRESSOR> and exits")
                 .display_order(1)
         )
         .arg(
@@ -63,4 +63,13 @@ fn build_cli() -> App<'static, 'static> {
                 .index(1)
                 .multiple(true)
         )
+        .after_help(
+            "EXAMPLES \n\
+             \tIf you want to keep visual whitespace while text processing; You can use sed to \n\
+             \tremove the visualizations as the last step of text processing. \n\
+             \n\
+             \t$ MAPS=\"$(xmlparser --whitespace-maps)\" \n\
+             \t$ xmlparser foo.xml | <Your text processing here> | sed -e \
+             'y/${MAPS%|*}/ \\t\\n' -e 's/${MAPS#*|}/    /g'"
+            )
 }
