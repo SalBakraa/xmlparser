@@ -35,6 +35,11 @@ use cty::*;
 
 use phf::{ phf_map, Map };
 
+use once_cell::sync::OnceCell;
+
+pub static DO_MAP_WHITESPACE: OnceCell<bool> = OnceCell::new();
+pub static DO_COMPRESS_WHITESPACE: OnceCell<bool> = OnceCell::new();
+
 static WHITESPACE_MAP: Map<char, char> = phf_map! {
     ' ' => '␣',
     '\t' => '→',
@@ -312,10 +317,16 @@ fn string_from_xmlchar_with_null(chars: *const xmlChar) -> String {
 }
 
 fn translate_whitespace(c: char) -> char {
+    if !DO_MAP_WHITESPACE.get_or_init(|| true) {
+        return c;
+    }
     *WHITESPACE_MAP.get(&c).unwrap_or(&c)
 }
 
 fn compress_whitespace(string: String) -> String {
+    if !DO_COMPRESS_WHITESPACE.get_or_init(|| true) {
+        return string;
+    }
     string.replace("␣␣␣␣", &COMPRESSED_WHITESPACE.to_string())
 }
 

@@ -35,6 +35,15 @@ fn real_main() -> i32 {
         return 0;
     }
 
+    if matches.is_present("No whitespace mapping") {
+        xmlparser::DO_MAP_WHITESPACE.set(false);
+        xmlparser::DO_COMPRESS_WHITESPACE.set(false);
+    }
+
+    if matches.is_present("No whitespace compressing") {
+        xmlparser::DO_COMPRESS_WHITESPACE.set(false);
+    }
+
     for file in matches.values_of("FILE").unwrap().collect::<Vec<_>>() {
         xmlparser::print_nodes(file.to_owned());
     }
@@ -55,6 +64,19 @@ fn build_cli() -> App<'static, 'static> {
                 .help("Print the characters used to visualize/compress whitespace \
                       charcters in the following order <SPACE><\\t><\\n>|<COMPRESSOR> and exits")
                 .display_order(1)
+        )
+        .arg(
+            Arg::with_name("No whitespace mapping")
+                .short("k")
+                .long("keep-whitespace")
+                .help("Prevents whitespace from being mapped to display charcters. Assumes --no-compress")
+                .display_order(2)
+        )
+        .arg(
+            Arg::with_name("No whitespace compressing")
+                .long("no-compress")
+                .help("Prevents whitespace from being compressed")
+                .display_order(3)
         )
         .arg(
             Arg::with_name("FILE")
