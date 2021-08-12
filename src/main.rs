@@ -15,8 +15,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use clap::{App, Arg};
-use clap::{ crate_name, crate_version, crate_authors, crate_description };
+mod cli;
+
+use cli::build_cli;
 
 fn main() {
     let exit_code = real_main();
@@ -51,58 +52,4 @@ fn real_main() -> i32 {
     }
 
     0
-}
-
-fn build_cli() -> App<'static, 'static> {
-    App::new(crate_name!())
-        .version(crate_version!())
-        .author(crate_authors!())
-        .about(crate_description!())
-        .arg(
-            Arg::with_name("print whitespace map")
-                .short("p")
-                .long("whitespace-maps")
-                .help("Print the characters used to visualize/compress whitespace \
-                      charcters in the following order <SPACE><\\t><\\n>|<COMPRESSOR> and exits")
-                .display_order(1)
-        )
-        .arg(
-            Arg::with_name("No whitespace mapping")
-                .short("k")
-                .long("keep-whitespace")
-                .help("Prevents whitespace from being mapped to display charcters. Assumes --no-compress")
-                .display_order(2)
-        )
-        .arg(
-            Arg::with_name("No whitespace compressing")
-                .long("no-compress")
-                .help("Prevents whitespace from being compressed")
-                .display_order(3)
-        )
-        .arg(
-            Arg::with_name("Compression level")
-                .short("c")
-                .long("compress-level")
-                .help("Specifies the number consecutive spaces compressed to a \
-                       single character. Default: 4 spaces")
-                .takes_value(true)
-                .allow_hyphen_values(true)
-                .display_order(4)
-        )
-        .arg(
-            Arg::with_name("FILES")
-                .required_unless("print whitespace map")
-                .help("XML files to read")
-                .index(1)
-                .multiple(true)
-        )
-        .after_help(
-            "EXAMPLES: \n\
-             \tIf you want to keep visual whitespace while text processing; You can use sed to \n\
-             \tremove the visualizations as the last step of text processing. \n\
-             \n\
-             \t$ MAPS=\"$(xmlparser --whitespace-maps)\" \n\
-             \t$ xmlparser foo.xml | <Your text processing here> | sed -e \
-             'y/${MAPS%|*}/ \\t\\n' -e 's/${MAPS#*|}/    /g'"
-            )
 }

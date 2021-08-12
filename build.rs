@@ -2,9 +2,16 @@ extern crate bindgen;
 
 extern crate cc;
 
+#[path = "src/cli.rs"]
+mod cli;
+
+use cli::build_cli;
+
 use std::env;
 use std::fs;
 use std::path::PathBuf;
+
+use clap::{ crate_name, Shell };
 
 //Relative to build.rs location
 static C_DIRECTORY: &str = "src/c";
@@ -67,4 +74,9 @@ fn main() {
 
         bindings.write_to_file(out_path.join(header)).unwrap();
     }
+
+    let mut app = build_cli();
+    app.gen_completions(crate_name!(), Shell::Zsh, &out_path);
+    app.gen_completions(crate_name!(), Shell::Bash, &out_path);
+    app.gen_completions(crate_name!(), Shell::Fish, &out_path);
 }
