@@ -18,10 +18,18 @@ static C_DIRECTORY: &str = "src/c";
 static HEADERS_DIRECTORY: &str = "src/headers";
 
 fn main() {
-    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+    let out_path = env::var("OUT_DIR").unwrap();
+
+    // Use 'target' as the target dir since there is no way to know if
+    // the user changed it
+    let target_dir = String::from("target");
+    fs::create_dir_all(&target_dir).unwrap();
+
+    // Write the out_path to file so that it can be used out of cargo
+    fs::write(PathBuf::from(&target_dir).join("out_dir"), &out_path).unwrap();
 
     // Have gcc look for libraries in out_path
-    println!("cargo:rustc-link-search={}", out_path.to_str().unwrap());
+    println!("cargo:rustc-link-search={}", out_path);
 
     // Tell cargo to link the project's compiled c libs in out_path
     println!("cargo:rustc-link-lib=xmlparser");
@@ -72,7 +80,7 @@ fn main() {
         header.set_extension("rs");
         let header = header.file_name().unwrap();
 
-        bindings.write_to_file(out_path.join(header)).unwrap();
+        bindings.write_to_file(PathBuf::from(&out_path).join(header)).unwrap();
     }
 
     let mut app = build_cli();
