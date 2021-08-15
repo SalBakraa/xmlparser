@@ -1,11 +1,14 @@
-extern crate bindgen;
-
-extern crate cc;
-
 #[path = "src/cli.rs"]
 mod cli;
 
+#[cfg(feature="pkgbuild")]
+#[path = "build/pkgbuild.rs"]
+mod pkgbuild;
+
 use cli::build_cli;
+
+#[cfg(feature="pkgbuild")]
+use pkgbuild::write_pkgbuild;
 
 use std::env;
 use std::fs;
@@ -16,6 +19,7 @@ use clap::{ crate_name, Shell };
 //Relative to build.rs location
 static C_DIRECTORY: &str = "src/c";
 static HEADERS_DIRECTORY: &str = "src/headers";
+static BUILD_MODULES: &str = "build";
 
 fn main() {
     let out_path = env::var("OUT_DIR").unwrap();
@@ -42,6 +46,9 @@ fn main() {
 
     // Tell cargo to invalidate the built crate whenever the wrapper changes
     println!("cargo:rerun-if-changed={}", HEADERS_DIRECTORY);
+
+    // Tell cargo to invalidate the built crate whenever the wrapper changes
+    println!("cargo:rerun-if-changed={}", BUILD_MODULES);
 
     let c_files: Vec<PathBuf> = fs::read_dir(C_DIRECTORY).unwrap()
         .into_iter().map(|f| f.unwrap().path()).collect();
@@ -87,4 +94,7 @@ fn main() {
     app.gen_completions(crate_name!(), Shell::Zsh, &out_path);
     app.gen_completions(crate_name!(), Shell::Bash, &out_path);
     app.gen_completions(crate_name!(), Shell::Fish, &out_path);
+
+    #[cfg(feature="pkgbuild")]
+    write_pkgbuild().unwrap();
 }
