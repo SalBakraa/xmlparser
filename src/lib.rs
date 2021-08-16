@@ -293,36 +293,26 @@ fn string_from_xmlchar(chars: *const xmlChar, len: isize) -> String {
     }
 
     let len = len as usize;
-    let mut container = vec!['\0'; len];
+    let mut container = String::with_capacity(len);
     for i in 0..len {
-        container[i] = translate_whitespace(unsafe { *(chars.add(i)) } as char);
+        container.push(translate_whitespace(unsafe { *(chars.add(i)) } as char));
     }
 
-    compress_whitespace(String::from_iter(container))
+    compress_whitespace(container)
 }
 
 fn string_from_xmlchar_with_null(chars: *const xmlChar) -> String {
-    let mut container = Vec::new();
     if chars.is_null() {
-        return String::from_iter(container);
+        return String::new();
     }
 
-    unsafe {
+    let len = unsafe {
         let mut i = 0;
-        loop {
-            let c = *(chars.offset(i)) as char;
-            if c == '\0' {
-                break;
-            }
+        while *(chars.offset(i)) != b'\0' { i += 1; }
+        i
+    };
 
-            let c = translate_whitespace(c);
-            container.push(c);
-
-            i += 1;
-        }
-    }
-
-    compress_whitespace(String::from_iter(container))
+    string_from_xmlchar(chars, len)
 }
 
 fn translate_whitespace(c: char) -> char {
@@ -356,17 +346,19 @@ fn is_only_whitespace(string: &String) -> bool {
 }
 
 fn vec_from_ptr_with_null(ptr: *mut *const xmlChar) -> Vec<*const xmlChar> {
-    let mut container = Vec::new();
     if ptr.is_null() {
-        return container;
+        return Vec::new();
     }
 
-    unsafe {
+    let len = unsafe {
         let mut i = 0;
-        while !(*ptr.add(i)).is_null() {
-            container.push(*ptr.add(i));
-            i += 1;
-        }
-        container
+        while !(*ptr.add(i)).is_null() { i += 1; }
+        i
+    };
+
+    let mut container = Vec::with_capacity(len);
+    for i in 0..len {
+        container.push(unsafe { *ptr.add(i) });
     }
+    container
 }
