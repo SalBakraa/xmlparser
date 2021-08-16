@@ -5,6 +5,7 @@
 pkgname='xmlparse'
 pkgver='0.8.0'
 pkgrel=1
+pkgdesc='An extensible xml processing tool that converts xml data to a line oriented format similar to that of xpath.'
 url='https://github.com/SalBakraa/xmlparse'
 arch=('any')
 license=('GPL-3.0-or-later')

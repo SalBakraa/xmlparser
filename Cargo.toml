@@ -2,6 +2,7 @@
 name = 'xmlparse'
 version = '0.8.0'
 authors = [ "Sal Bakra'a <SalBakraa@gmail.com>" ]
+description = 'An extensible xml processing tool that converts xml data to a line oriented format similar to that of xpath.'
 edition = '2018'
 repository = 'https://github.com/SalBakraa/xmlparse'
 license = 'GPL-3.0-or-later'
