@@ -31,6 +31,8 @@ include!(concat!(env!("OUT_DIR"), "/sax_funcs.rs"));
 use std::ffi::CString;
 use std::ptr::null_mut;
 use std::iter::FromIterator;
+use std::io::Write;
+use std::io::{ stdout as rust_stdout, Stdout, BufWriter };
 
 use cty::*;
 
@@ -53,7 +55,9 @@ static COMPRESSED_WHITESPACE: char = '·';
 
 struct ParserData {
     result: u32,
-    path: PathNode
+    path: PathNode,
+    // can't be named stdout since parser.rs already defined it
+    stdoutput: BufWriter<Stdout>,
 }
 
 struct PathNode {
@@ -65,10 +69,11 @@ struct PathNode {
 type NodeLink = Option<Box<PathNode>>;
 
 impl ParserData {
-    fn new() -> ParserData {
+    fn new() -> Self {
         ParserData {
             result: 0,
-            path: PathNode::new()
+            path: PathNode::new(),
+            stdoutput: BufWriter::new(rust_stdout())
         }
     }
 
@@ -219,7 +224,7 @@ extern fn sax_start_element(user_data_ptr: *mut c_void, name: *const xmlChar, at
 
     let parent = (*user_data).last_path_node();
     if !parent.printed {
-        println!("{}", (*user_data).path);
+        writeln!((*user_data).stdoutput, "{}", (*user_data).path).unwrap();
         (*user_data).last_path_node_mut().set_printed(true);
     }
 
@@ -235,7 +240,7 @@ extern fn sax_start_element(user_data_ptr: *mut c_void, name: *const xmlChar, at
     let attrs: Vec<String> = attrs.chunks(2).map(|c| format!("{}=\"{}\"", c[0], c[1])).collect();
     let attrs = attrs.join(",");
 
-    println!("{}@[{}]", (*user_data).path, attrs);
+    writeln!((*user_data).stdoutput, "{}@[{}]", (*user_data).path, attrs).unwrap();
     (*user_data).last_path_node_mut().set_printed(true);
 }
 
@@ -249,7 +254,7 @@ extern fn sax_end_element(user_data_ptr: *mut c_void, name: *const xmlChar) {
     }
 
     if !last.printed {
-        println!("{}", (*user_data).path);
+        writeln!((*user_data).stdoutput, "{}", (*user_data).path).unwrap();
     }
 
     (*user_data).remove_last_path_node();
@@ -262,7 +267,7 @@ extern fn sax_characters(user_data_ptr: *mut c_void, chars: *const xmlChar, len:
         return;
     }
 
-    println!("{}=\"{}\"", (*user_data).path, chars);
+    writeln!((*user_data).stdoutput, "{}=\"{}\"", (*user_data).path, chars).unwrap();
 
     (*user_data).last_path_node_mut().set_printed(true);
 }
@@ -272,13 +277,14 @@ extern fn sax_processing_instruction(user_data_ptr: *mut c_void, target: *const 
     let target = string_from_xmlchar_with_null(target);
     let data = string_from_xmlchar_with_null(data);
 
-    println!("{}/{}?[{}]", (*user_data).path, target, data);
+    writeln!((*user_data).stdoutput, "{}/{}?[{}]", (*user_data).path, target, data).unwrap();
 }
 
 extern fn sax_comment(user_data_ptr: *mut c_void, comment: *const xmlChar) {
     let user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
     let comment = string_from_xmlchar_with_null(comment);
-    println!("{}/![{}]", (*user_data).path, comment);
+
+    writeln!((*user_data).stdoutput, "{}/![{}]", (*user_data).path, comment).unwrap();
 }
 
 fn string_from_xmlchar(chars: *const xmlChar, len: isize) -> String {
