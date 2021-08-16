@@ -1,4 +1,5 @@
-/* xmlparser - An xml parser meant to be used extensibly in shell scripts
+/* xmlparse - An extensible xml processing tool that converts xml data to
+ * a line oriented format similar to that of xpath.
  * Copyright (C) 2021 Saleh Bakra'a
  *
  * This program is free software: you can redistribute it and/or modify

@@ -1,4 +1,5 @@
-/* xmlparser - An xml parser meant to be used extensibly in shell scripts
+/* xmlparse - An extensible xml processing tool that converts xml data to
+ * a line oriented format similar to that of xpath.
  * Copyright (C) 2021 Saleh Bakra'a
  *
  * This program is free software: you can redistribute it and/or modify
@@ -29,26 +30,26 @@ fn real_main() -> i32 {
     let matches = app.get_matches();
 
     if matches.is_present("print whitespace map") {
-        xmlparser::print_whitespace_mappings();
+        xmlparse::print_whitespace_mappings();
         return 0;
     }
 
     if matches.is_present("No whitespace mapping") {
-        let _ = xmlparser::DO_MAP_WHITESPACE.set(false);
-        let _ = xmlparser::DO_COMPRESS_WHITESPACE.set(false);
+        let _ = xmlparse::DO_MAP_WHITESPACE.set(false);
+        let _ = xmlparse::DO_COMPRESS_WHITESPACE.set(false);
     }
 
     if matches.is_present("No whitespace compressing") {
-        let _ = xmlparser::DO_COMPRESS_WHITESPACE.set(false);
+        let _ = xmlparse::DO_COMPRESS_WHITESPACE.set(false);
     }
 
     if let Some(level) = matches.value_of("Compression level") {
         let level: usize = level.parse().unwrap_or(4);
-        let _ = xmlparser::COMPRESSION_LEVEL.set(level);
+        let _ = xmlparse::COMPRESSION_LEVEL.set(level);
     }
 
     for file in matches.values_of("FILES").unwrap().collect::<Vec<_>>() {
-        xmlparser::print_nodes(file.to_owned());
+        xmlparse::print_nodes(file.to_owned());
     }
 
     0

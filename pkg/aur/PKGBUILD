@@ -2,10 +2,10 @@
 #
 # File was auto generated through build.rs
 
-pkgname='xmlparser'
+pkgname='xmlparse'
 pkgver='0.8.0'
 pkgrel=1
-url='https://github.com/SalBakraa/xmlparser'
+url='https://github.com/SalBakraa/xmlparse'
 arch=('any')
 license=('GPL-3.0-or-later')
 provides=("$pkgname")

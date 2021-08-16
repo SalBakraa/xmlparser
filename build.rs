@@ -36,7 +36,7 @@ fn main() {
     println!("cargo:rustc-link-search={}", out_path);
 
     // Tell cargo to link the project's compiled c libs in out_path
-    println!("cargo:rustc-link-lib=xmlparser");
+    println!("cargo:rustc-link-lib=xmlparse");
 
     // Tell cargo to tell rustc to link the libxml2 shared system library.
     println!("cargo:rustc-link-lib=xml2");
@@ -61,7 +61,7 @@ fn main() {
         // Include path to header files
         .include(HEADERS_DIRECTORY)
         .files(c_files)
-        .compile("xmlparser");
+        .compile("xmlparse");
 
     let headers = fs::read_dir(HEADERS_DIRECTORY).unwrap();
     for header in headers {

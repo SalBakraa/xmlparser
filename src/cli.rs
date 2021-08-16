@@ -1,4 +1,5 @@
-/* xmlparser - An xml parser meant to be used extensibly in shell scripts
+/* xmlparse - An extensible xml processing tool that converts xml data to
+ * a line oriented format similar to that of xpath.
  * Copyright (C) 2021 Saleh Bakra'a
  *
  * This program is free software: you can redistribute it and/or modify
@@ -68,8 +69,8 @@ pub fn build_cli() -> App<'static, 'static> {
              \tIf you want to keep visual whitespace while text processing; You can use sed to \n\
              \tremove the visualizations as the last step of text processing. \n\
              \n\
-             \t$ MAPS=\"$(xmlparser --whitespace-maps)\" \n\
-             \t$ xmlparser foo.xml | <Your text processing here> | sed -e \
+             \t$ MAPS=\"$(xmlparse --whitespace-maps)\" \n\
+             \t$ xmlparse foo.xml | <Your text processing here> | sed -e \
              'y/${MAPS%|*}/ \\t\\n' -e 's/${MAPS#*|}/    /g'"
             )
 }
