@@ -294,8 +294,9 @@ fn string_from_xmlchar(chars: *const xmlChar, len: isize) -> String {
 
     let len = len as usize;
     let mut container = String::with_capacity(len);
-    for i in 0..len {
-        container.push(translate_whitespace(unsafe { *(chars.add(i)) } as char));
+    unsafe {
+        std::ptr::copy(chars, container.as_mut_vec().as_mut_ptr(), len);
+        container.as_mut_vec().set_len(len);
     }
 
     compress_whitespace(container)
@@ -357,8 +358,9 @@ fn vec_from_ptr_with_null(ptr: *mut *const xmlChar) -> Vec<*const xmlChar> {
     };
 
     let mut container = Vec::with_capacity(len);
-    for i in 0..len {
-        container.push(unsafe { *ptr.add(i) });
+    unsafe {
+        std::ptr::copy(ptr, container.as_mut_ptr(), len);
+        container.set_len(len);
     }
     container
 }
