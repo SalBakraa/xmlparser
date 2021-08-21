@@ -3,7 +3,7 @@
 # File was auto generated through build.rs
 
 pkgname='xmlparse'
-pkgver='0.8.3'
+pkgver='0.8.4'
 pkgrel=1
 pkgdesc='An extensible xml processing tool that converts xml data to a line oriented format similar to that of xpath.'
 url='https://github.com/SalBakraa/xmlparse'
