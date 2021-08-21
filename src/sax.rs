@@ -42,11 +42,9 @@ use bindings::sax_fatal_error;
 
 use super::WHITESPACE_MAP;
 use super::DO_MAP_WHITESPACE;
-
 use super::COMPRESSED_WHITESPACE;
 use super::DO_COMPRESS_WHITESPACE;
 use super::COMPRESSION_LEVEL;
-
 use super::ParserData;
 use super::PathNode;
 
