@@ -35,10 +35,6 @@ mod bindings {
 use bindings::xmlChar;
 use bindings::xmlSAXHandler;
 use bindings::xmlSAXHandlerPtr;
-use bindings::xmlSAXUserParseFile;
-use bindings::sax_warning;
-use bindings::sax_error;
-use bindings::sax_fatal_error;
 
 use super::WHITESPACE_MAP;
 use super::DO_MAP_WHITESPACE;
@@ -99,15 +95,15 @@ pub fn init_sax_handler(sax: xmlSAXHandlerPtr) {
         (*sax).characters = Some(sax_characters);
         (*sax).processingInstruction = Some(sax_processing_instruction);
         (*sax).comment = Some(sax_comment);
-        (*sax).warning = Some(sax_warning);
-        (*sax).error = Some(sax_error);
-        (*sax).fatalError = Some(sax_fatal_error);
+        (*sax).warning = Some(bindings::sax_warning);
+        (*sax).error = Some(bindings::sax_error);
+        (*sax).fatalError = Some(bindings::sax_fatal_error);
         (*sax).initialized = 1;
     }
 }
 
 pub fn sax_user_parse_file(sax: xmlSAXHandlerPtr, data_ptr: *mut c_void, file: CString) {
-    unsafe { xmlSAXUserParseFile(sax, data_ptr, file.into_raw()); }
+    unsafe { bindings::xmlSAXUserParseFile(sax, data_ptr, file.into_raw()); }
 }
 
 fn deref_mut_void_ptr<'a, T>(ptr: *mut c_void) -> &'a mut T {

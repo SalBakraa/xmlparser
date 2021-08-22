@@ -20,10 +20,6 @@ mod sax;
 
 mod parser_data;
 
-use sax::default_sax_handler;
-use sax::init_sax_handler;
-use sax::sax_user_parse_file;
-
 use parser_data::ParserData;
 
 use std::ffi::CString;
@@ -56,10 +52,10 @@ pub fn print_whitespace_mappings() {
 pub fn print_nodes(file: String) {
     let file = CString::new(file).unwrap();
 
-    let mut handler = default_sax_handler();
-    init_sax_handler(&mut handler);
+    let mut handler = sax::default_sax_handler();
+    sax::init_sax_handler(&mut handler);
 
     let mut data = ParserData::new();
     let data_ptr = &mut data as *mut _ as *mut c_void;
-    sax_user_parse_file(&mut handler, data_ptr, file);
+    sax::sax_user_parse_file(&mut handler, data_ptr, file);
 }
