@@ -32,15 +32,90 @@ mod bindings {
     include!(concat!(env!("OUT_DIR"), "/sax_funcs.rs"));
 }
 
+mod ptr_conversions {
+    use super::bindings::xmlChar;
+
+    use crate::WHITESPACE_MAP;
+    use crate::DO_MAP_WHITESPACE;
+    use crate::COMPRESSED_WHITESPACE;
+    use crate::DO_COMPRESS_WHITESPACE;
+    use crate::COMPRESSION_LEVEL;
+
+    pub fn string_from_xmlchar_with_null(chars: *const xmlChar) -> String {
+        if chars.is_null() {
+            return String::new();
+        }
+
+        let len = unsafe {
+            let mut i = 0;
+            while *(chars.offset(i)) != b'\0' { i += 1; }
+            i
+        };
+
+        string_from_xmlchar(chars, len)
+    }
+
+    pub fn string_from_xmlchar(chars: *const xmlChar, len: isize) -> String {
+        if len < 0 {
+            panic!("Length must be positive.")
+        }
+
+        let len = len as usize;
+        let mut container = String::with_capacity(len);
+        unsafe {
+            std::ptr::copy(chars, container.as_mut_vec().as_mut_ptr(), len);
+            container.as_mut_vec().set_len(len);
+        }
+
+        container
+    }
+
+    pub fn vec_from_ptr_with_null(ptr: *mut *const xmlChar) -> Vec<*const xmlChar> {
+        if ptr.is_null() {
+            return Vec::new();
+        }
+
+        let len = unsafe {
+            let mut i = 0;
+            while !(*ptr.add(i)).is_null() { i += 1; }
+            i
+        };
+
+        let mut container = Vec::with_capacity(len);
+        unsafe {
+            std::ptr::copy(ptr, container.as_mut_ptr(), len);
+            container.set_len(len);
+        }
+        container
+    }
+
+    fn _translate_whitespace(c: char) -> char {
+        if !DO_MAP_WHITESPACE.get_or_init(|| true) {
+            return c;
+        }
+        *WHITESPACE_MAP.get(&c).unwrap_or(&c)
+    }
+
+    fn _compress_whitespace(string: String) -> String {
+        if !DO_COMPRESS_WHITESPACE.get_or_init(|| true) {
+            return string;
+        }
+
+        let compressed_string = "␣".repeat(*COMPRESSION_LEVEL.get_or_init(|| 4));
+        string.replace(&compressed_string, &COMPRESSED_WHITESPACE.to_string())
+    }
+}
+
 use bindings::xmlChar;
 use bindings::xmlSAXHandler;
 use bindings::xmlSAXHandlerPtr;
 
-use super::WHITESPACE_MAP;
-use super::DO_MAP_WHITESPACE;
-use super::COMPRESSED_WHITESPACE;
-use super::DO_COMPRESS_WHITESPACE;
-use super::COMPRESSION_LEVEL;
+use ptr_conversions::string_from_xmlchar;
+use ptr_conversions::string_from_xmlchar_with_null;
+use ptr_conversions::vec_from_ptr_with_null;
+
+use crate::WHITESPACE_MAP;
+use crate::COMPRESSED_WHITESPACE;
 
 use crate::parser_data::ParserData;
 use crate::parser_data::PathNode;
@@ -185,51 +260,6 @@ extern fn sax_comment(user_data_ptr: *mut c_void, comment: *const xmlChar) {
     writeln!(write_buf, "{}/![{}]", path, comment).unwrap();
 }
 
-fn string_from_xmlchar(chars: *const xmlChar, len: isize) -> String {
-    if len < 0 {
-        panic!("Length must be positive.")
-    }
-
-    let len = len as usize;
-    let mut container = String::with_capacity(len);
-    unsafe {
-        std::ptr::copy(chars, container.as_mut_vec().as_mut_ptr(), len);
-        container.as_mut_vec().set_len(len);
-    }
-
-    compress_whitespace(container)
-}
-
-fn string_from_xmlchar_with_null(chars: *const xmlChar) -> String {
-    if chars.is_null() {
-        return String::new();
-    }
-
-    let len = unsafe {
-        let mut i = 0;
-        while *(chars.offset(i)) != b'\0' { i += 1; }
-        i
-    };
-
-    string_from_xmlchar(chars, len)
-}
-
-fn translate_whitespace(c: char) -> char {
-    if !DO_MAP_WHITESPACE.get_or_init(|| true) {
-        return c;
-    }
-    *WHITESPACE_MAP.get(&c).unwrap_or(&c)
-}
-
-fn compress_whitespace(string: String) -> String {
-    if !DO_COMPRESS_WHITESPACE.get_or_init(|| true) {
-        return string;
-    }
-
-    let compressed_string = "␣".repeat(*COMPRESSION_LEVEL.get_or_init(|| 4));
-    string.replace(&compressed_string, &COMPRESSED_WHITESPACE.to_string())
-}
-
 fn is_only_whitespace(string: &String) -> bool {
     if string.trim().is_empty() {
         return true
@@ -242,23 +272,4 @@ fn is_only_whitespace(string: &String) -> bool {
     }
 
     true
-}
-
-fn vec_from_ptr_with_null(ptr: *mut *const xmlChar) -> Vec<*const xmlChar> {
-    if ptr.is_null() {
-        return Vec::new();
-    }
-
-    let len = unsafe {
-        let mut i = 0;
-        while !(*ptr.add(i)).is_null() { i += 1; }
-        i
-    };
-
-    let mut container = Vec::with_capacity(len);
-    unsafe {
-        std::ptr::copy(ptr, container.as_mut_ptr(), len);
-        container.set_len(len);
-    }
-    container
 }
