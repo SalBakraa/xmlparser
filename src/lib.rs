@@ -25,7 +25,7 @@ use parser_data::ParserData;
 use std::ffi::CString;
 use std::iter::FromIterator;
 
-use cty::*;
+use cty::c_void;
 
 use phf::{ phf_map, Map };
 
