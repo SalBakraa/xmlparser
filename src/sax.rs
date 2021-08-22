@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-mod bindings{
+mod bindings {
     // Since libxml2 does not follow rust's coding conventions
     #![allow(non_upper_case_globals)]
     #![allow(non_camel_case_types)]
@@ -45,8 +45,9 @@ use super::DO_MAP_WHITESPACE;
 use super::COMPRESSED_WHITESPACE;
 use super::DO_COMPRESS_WHITESPACE;
 use super::COMPRESSION_LEVEL;
-use super::ParserData;
-use super::PathNode;
+
+use crate::parser_data::ParserData;
+use crate::parser_data::PathNode;
 
 use std::ffi::CString;
 use std::ptr::null_mut;
@@ -118,8 +119,9 @@ extern fn sax_start_element(user_data_ptr: *mut c_void, name: *const xmlChar, at
     let user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
 
     let parent = (*user_data).last_path_node();
-    if !parent.printed {
-        writeln!((*user_data).stdoutput, "{}", (*user_data).path).unwrap();
+    if !parent.printed() {
+        let (path, write_buf) = (*user_data).path_and_buf_mut();
+        writeln!(write_buf, "{}", path).unwrap();
         (*user_data).last_path_node_mut().set_printed(true);
     }
 
@@ -135,7 +137,8 @@ extern fn sax_start_element(user_data_ptr: *mut c_void, name: *const xmlChar, at
     let attrs: Vec<String> = attrs.chunks(2).map(|c| format!("{}=\"{}\"", c[0], c[1])).collect();
     let attrs = attrs.join(",");
 
-    writeln!((*user_data).stdoutput, "{}@[{}]", (*user_data).path, attrs).unwrap();
+    let (path, write_buf) = (*user_data).path_and_buf_mut();
+    writeln!(write_buf, "{}@[{}]", path, attrs).unwrap();
     (*user_data).last_path_node_mut().set_printed(true);
 }
 
@@ -144,12 +147,13 @@ extern fn sax_end_element(user_data_ptr: *mut c_void, name: *const xmlChar) {
     let name = string_from_xmlchar_with_null(name);
 
     let last = (*user_data).last_path_node();
-    if last.name != name {
+    if last.name() != &name {
         return
     }
 
-    if !last.printed {
-        writeln!((*user_data).stdoutput, "{}", (*user_data).path).unwrap();
+    if !last.printed() {
+        let (path, write_buf) = (*user_data).path_and_buf_mut();
+        writeln!(write_buf, "{}", path).unwrap();
     }
 
     (*user_data).remove_last_path_node();
@@ -162,7 +166,8 @@ extern fn sax_characters(user_data_ptr: *mut c_void, chars: *const xmlChar, len:
         return;
     }
 
-    writeln!((*user_data).stdoutput, "{}=\"{}\"", (*user_data).path, chars).unwrap();
+    let (path, write_buf) = (*user_data).path_and_buf_mut();
+    writeln!(write_buf, "{}=\"{}\"", path, chars).unwrap();
 
     (*user_data).last_path_node_mut().set_printed(true);
 }
@@ -172,14 +177,16 @@ extern fn sax_processing_instruction(user_data_ptr: *mut c_void, target: *const 
     let target = string_from_xmlchar_with_null(target);
     let data = string_from_xmlchar_with_null(data);
 
-    writeln!((*user_data).stdoutput, "{}/{}?[{}]", (*user_data).path, target, data).unwrap();
+    let (path, write_buf) = (*user_data).path_and_buf_mut();
+    writeln!(write_buf, "{}/{}?[{}]", path, target, data).unwrap();
 }
 
 extern fn sax_comment(user_data_ptr: *mut c_void, comment: *const xmlChar) {
     let user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
     let comment = string_from_xmlchar_with_null(comment);
 
-    writeln!((*user_data).stdoutput, "{}/![{}]", (*user_data).path, comment).unwrap();
+    let (path, write_buf) = (*user_data).path_and_buf_mut();
+    writeln!(write_buf, "{}/![{}]", path, comment).unwrap();
 }
 
 fn string_from_xmlchar(chars: *const xmlChar, len: isize) -> String {

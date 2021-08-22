@@ -1,6 +1,6 @@
 [package]
 name = 'xmlparse'
-version = '0.8.4'
+version = '0.8.5'
 authors = [ "Sal Bakra'a <SalBakraa@gmail.com>" ]
 description = 'An extensible xml processing tool that converts xml data to a line oriented format similar to that of xpath.'
 edition = '2018'
