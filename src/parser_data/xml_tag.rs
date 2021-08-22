@@ -16,45 +16,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pub struct PathNode {
-    child: NodeLink,
+#[derive(Default)]
+pub struct XmlTag {
     name: String,
     printed: bool,
 }
 
-pub type NodeLink = Option<Box<PathNode>>;
-
-impl PathNode {
-    pub fn new() -> PathNode {
-        PathNode {
-            child: None,
-            name: String::new(),
-            printed: false
-        }
-    }
-
-    pub fn from(child: NodeLink, name: String, printed: bool) -> PathNode {
-        PathNode { child, name, printed }
-    }
-
-    pub fn child(&self) -> &PathNode {
-        &*(self.child.as_ref().unwrap())
-    }
-
-    pub fn child_mut(&mut self) -> &mut PathNode {
-        &mut *(self.child.as_mut().unwrap())
-    }
-
-    pub fn set_child(&mut self, val: PathNode) {
-        self.child = Some(Box::new(val));
-    }
-
-    pub fn has_child(&self) -> bool {
-        self.child.is_some()
-    }
-
-    pub fn take_child(&mut self) -> NodeLink {
-        self.child.take()
+impl XmlTag {
+    pub fn from(name: String, printed: bool) -> Self {
+        XmlTag { name, printed }
     }
 
     pub fn printed(&self) -> bool {
@@ -70,12 +40,8 @@ impl PathNode {
     }
 }
 
-impl std::fmt::Display for PathNode {
+impl std::fmt::Display for XmlTag {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        if self.child.is_some() {
-            write!(f, "{}/{}", self.name, *(self.child.as_ref().unwrap()))
-        } else {
-            write!(f, "{}", self.name)
-        }
+        write!(f, "{}", self.name)
     }
 }

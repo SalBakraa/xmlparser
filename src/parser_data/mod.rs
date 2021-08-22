@@ -16,55 +16,69 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-mod path_node;
+mod xml_tag;
 
-pub use path_node::PathNode;
-pub use path_node::NodeLink;
+pub use xml_tag::XmlTag;
 
+use std::io::Write;
 use std::io::{ stdout, Stdout, BufWriter };
+
+pub struct XmlTags(Vec<XmlTag>);
 
 pub struct ParserData {
     result: u32,
-    path: PathNode,
+    tags: XmlTags,
     stdout: BufWriter<Stdout>,
 }
 
 impl ParserData {
-    pub fn new() -> Self {
+    pub fn with_capacity(cap: usize) -> Self {
         ParserData {
             result: 0,
-            path: PathNode::new(),
+            tags: XmlTags(Vec::with_capacity(cap)),
             stdout: BufWriter::new(stdout())
         }
     }
 
-    pub fn path_and_buf_mut(&mut self) -> (&mut PathNode, &mut BufWriter<Stdout>) {
-        (&mut self.path, &mut self.stdout)
+    pub fn tags_and_buf_mut(&mut self) -> (&mut XmlTags, &mut BufWriter<Stdout>) {
+        (&mut self.tags, &mut self.stdout)
     }
 
-    pub fn last_path_node(&self) -> &PathNode {
-        let mut temp = &self.path;
-        while temp.has_child() { temp = temp.child(); }
-        temp
+    pub fn last_tag(&self) -> Option<&XmlTag> {
+        self.tags.0.last()
     }
 
-    pub fn last_path_node_mut(&mut self) -> &mut PathNode {
-        let mut temp = &mut self.path;
-        while temp.has_child() { temp = temp.child_mut(); }
-        temp
+    pub fn last_tag_mut(&mut self) -> Option<&mut XmlTag> {
+        self.tags.0.last_mut()
     }
 
-    pub fn set_last_path_node(&mut self, node: PathNode) {
-        self.last_path_node_mut().set_child(node);
+    pub fn push_tag(&mut self, node: XmlTag) {
+        self.tags.0.push(node)
     }
 
-    pub fn remove_last_path_node(&mut self) -> PathNode {
-        let mut parent = &mut self.path;
-        while parent.has_child() {
-            if !parent.child().has_child() { break; }
-            parent = parent.child_mut();
+    pub fn pop_tag(&mut self) -> Option<XmlTag> {
+        self.tags.0.pop()
+    }
+
+    pub fn tags_is_empty(&self) -> bool {
+        self.tags.0.is_empty()
+    }
+
+    pub fn print_last_tag(&mut self) {
+        if self.tags_is_empty() {
+            return;
         }
 
-        return *parent.take_child().unwrap();
+        let tag = self.last_tag().unwrap();
+        if !tag.printed() {
+            writeln!(self.stdout, "{}", self.tags).unwrap();
+            self.last_tag_mut().unwrap().set_printed(true);
+        }
+    }
+}
+
+impl std::fmt::Display for XmlTags {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        self.0.iter().try_for_each(|t| write!(f, "/{}", t))
     }
 }

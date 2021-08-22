@@ -55,7 +55,7 @@ pub fn print_nodes(file: String) {
     let mut handler = sax::default_sax_handler();
     sax::init_sax_handler(&mut handler);
 
-    let mut data = ParserData::new();
+    let mut data = ParserData::with_capacity(10);
     let data_ptr = &mut data as *mut _ as *mut c_void;
     sax::sax_user_parse_file(&mut handler, data_ptr, file);
 }

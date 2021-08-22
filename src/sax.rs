@@ -118,7 +118,7 @@ use crate::WHITESPACE_MAP;
 use crate::COMPRESSED_WHITESPACE;
 
 use crate::parser_data::ParserData;
-use crate::parser_data::PathNode;
+use crate::parser_data::XmlTag;
 
 use std::ffi::CString;
 use std::ptr::null_mut;
@@ -189,15 +189,10 @@ fn deref_mut_void_ptr<'a, T>(ptr: *mut c_void) -> &'a mut T {
 extern fn sax_start_element(user_data_ptr: *mut c_void, name: *const xmlChar, attrs: *mut *const xmlChar) {
     let user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
 
-    let parent = (*user_data).last_path_node();
-    if !parent.printed() {
-        let (path, write_buf) = (*user_data).path_and_buf_mut();
-        writeln!(write_buf, "{}", path).unwrap();
-        (*user_data).last_path_node_mut().set_printed(true);
-    }
+    (*user_data).print_last_tag();
 
     let name = string_from_xmlchar_with_null(name);
-    (*user_data).set_last_path_node(PathNode::from(None, name, false));
+    (*user_data).push_tag(XmlTag::from(name, false));
 
     let attrs = vec_from_ptr_with_null(attrs);
     if attrs.is_empty() {
@@ -208,26 +203,22 @@ extern fn sax_start_element(user_data_ptr: *mut c_void, name: *const xmlChar, at
     let attrs: Vec<String> = attrs.chunks(2).map(|c| format!("{}=\"{}\"", c[0], c[1])).collect();
     let attrs = attrs.join(",");
 
-    let (path, write_buf) = (*user_data).path_and_buf_mut();
-    writeln!(write_buf, "{}@[{}]", path, attrs).unwrap();
-    (*user_data).last_path_node_mut().set_printed(true);
+    let (tags, write_buf) = (*user_data).tags_and_buf_mut();
+    writeln!(write_buf, "{}@[{}]", tags, attrs).unwrap();
+    (*user_data).last_tag_mut().unwrap().set_printed(true);
 }
 
 extern fn sax_end_element(user_data_ptr: *mut c_void, name: *const xmlChar) {
     let user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
     let name = string_from_xmlchar_with_null(name);
 
-    let last = (*user_data).last_path_node();
+    let last = (*user_data).last_tag().unwrap();
     if last.name() != &name {
         return
     }
 
-    if !last.printed() {
-        let (path, write_buf) = (*user_data).path_and_buf_mut();
-        writeln!(write_buf, "{}", path).unwrap();
-    }
-
-    (*user_data).remove_last_path_node();
+    (*user_data).print_last_tag();
+    (*user_data).pop_tag();
 }
 
 extern fn sax_characters(user_data_ptr: *mut c_void, chars: *const xmlChar, len: i32) {
@@ -237,10 +228,10 @@ extern fn sax_characters(user_data_ptr: *mut c_void, chars: *const xmlChar, len:
         return;
     }
 
-    let (path, write_buf) = (*user_data).path_and_buf_mut();
-    writeln!(write_buf, "{}=\"{}\"", path, chars).unwrap();
+    let (tags, write_buf) = (*user_data).tags_and_buf_mut();
+    writeln!(write_buf, "{}=\"{}\"", tags, chars).unwrap();
 
-    (*user_data).last_path_node_mut().set_printed(true);
+    (*user_data).last_tag_mut().unwrap().set_printed(true);
 }
 
 extern fn sax_processing_instruction(user_data_ptr: *mut c_void, target: *const xmlChar, data: *const xmlChar) {
@@ -248,16 +239,16 @@ extern fn sax_processing_instruction(user_data_ptr: *mut c_void, target: *const 
     let target = string_from_xmlchar_with_null(target);
     let data = string_from_xmlchar_with_null(data);
 
-    let (path, write_buf) = (*user_data).path_and_buf_mut();
-    writeln!(write_buf, "{}/{}?[{}]", path, target, data).unwrap();
+    let (tags, write_buf) = (*user_data).tags_and_buf_mut();
+    writeln!(write_buf, "{}/{}?[{}]", tags, target, data).unwrap();
 }
 
 extern fn sax_comment(user_data_ptr: *mut c_void, comment: *const xmlChar) {
     let user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
     let comment = string_from_xmlchar_with_null(comment);
 
-    let (path, write_buf) = (*user_data).path_and_buf_mut();
-    writeln!(write_buf, "{}/![{}]", path, comment).unwrap();
+    let (tags, write_buf) = (*user_data).tags_and_buf_mut();
+    writeln!(write_buf, "{}/![{}]", tags, comment).unwrap();
 }
 
 fn is_only_whitespace(string: &String) -> bool {
