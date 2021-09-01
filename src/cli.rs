@@ -66,6 +66,7 @@ pub fn build_cli() -> App<'static, 'static> {
         )
         .after_help(
             "EXAMPLES: \n\
+             \t CURRENTLY BROKEN BEHAVIOUR. WHITESPACE IS STILL MAINTANED. \n\
              \tIf you want to keep visual whitespace while text processing; You can use sed to \n\
              \tremove the visualizations as the last step of text processing. \n\
              \n\

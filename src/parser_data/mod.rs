@@ -23,15 +23,15 @@ pub use xml_tag::XmlTag;
 use std::io::Write;
 use std::io::{ stdout, Stdout, BufWriter };
 
-pub struct XmlTags(Vec<XmlTag>);
+pub struct XmlTags<'a>(Vec<XmlTag<'a>>);
 
-pub struct ParserData {
+pub struct ParserData<'a> {
     result: u32,
-    tags: XmlTags,
+    tags: XmlTags<'a>,
     stdout: BufWriter<Stdout>,
 }
 
-impl ParserData {
+impl<'a> ParserData<'a> {
     pub fn with_capacity(cap: usize) -> Self {
         ParserData {
             result: 0,
@@ -40,23 +40,23 @@ impl ParserData {
         }
     }
 
-    pub fn tags_and_buf_mut(&mut self) -> (&mut XmlTags, &mut BufWriter<Stdout>) {
+    pub fn tags_and_buf_mut(&mut self) -> (&mut XmlTags<'a>, &mut BufWriter<Stdout>) {
         (&mut self.tags, &mut self.stdout)
     }
 
-    pub fn last_tag(&self) -> Option<&XmlTag> {
+    pub fn last_tag(&self) -> Option<&XmlTag<'a>> {
         self.tags.0.last()
     }
 
-    pub fn last_tag_mut(&mut self) -> Option<&mut XmlTag> {
+    pub fn last_tag_mut(&mut self) -> Option<&mut XmlTag<'a>> {
         self.tags.0.last_mut()
     }
 
-    pub fn push_tag(&mut self, node: XmlTag) {
+    pub fn push_tag(&mut self, node: XmlTag<'a>) {
         self.tags.0.push(node)
     }
 
-    pub fn pop_tag(&mut self) -> Option<XmlTag> {
+    pub fn pop_tag(&mut self) -> Option<XmlTag<'a>> {
         self.tags.0.pop()
     }
 
@@ -77,7 +77,7 @@ impl ParserData {
     }
 }
 
-impl std::fmt::Display for XmlTags {
+impl<'a> std::fmt::Display for XmlTags<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         self.0.iter().try_for_each(|t| write!(f, "/{}", t))
     }

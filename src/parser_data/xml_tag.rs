@@ -17,13 +17,13 @@
  */
 
 #[derive(Default)]
-pub struct XmlTag {
-    name: String,
+pub struct XmlTag<'a> {
+    name: &'a str,
     printed: bool,
 }
 
-impl XmlTag {
-    pub fn from(name: String, printed: bool) -> Self {
+impl<'a> XmlTag<'a> {
+    pub fn from(name: &'a str, printed: bool) -> Self {
         XmlTag { name, printed }
     }
 
@@ -35,12 +35,12 @@ impl XmlTag {
         self.printed = val;
     }
 
-    pub fn name(&self) -> &String {
+    pub fn name(&self) -> &'a str {
         &self.name
     }
 }
 
-impl std::fmt::Display for XmlTag {
+impl<'a> std::fmt::Display for XmlTag<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{}", self.name)
     }

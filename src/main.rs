@@ -35,17 +35,29 @@ fn real_main() -> i32 {
     }
 
     if matches.is_present("No whitespace mapping") {
-        let _ = xmlparse::DO_MAP_WHITESPACE.set(false);
-        let _ = xmlparse::DO_COMPRESS_WHITESPACE.set(false);
+        eprintln!("DEPRECATED FLAG! whitespace is not replaced in normal behaviour.");
+        return 1;
+
+        // FIXME
+        //let _ = xmlparse::DO_MAP_WHITESPACE.set(false);
+        //let _ = xmlparse::DO_COMPRESS_WHITESPACE.set(false);
     }
 
     if matches.is_present("No whitespace compressing") {
-        let _ = xmlparse::DO_COMPRESS_WHITESPACE.set(false);
+        eprintln!("DEPRECATED FLAG! whitespace is not compressed in normal behaviour.");
+        return 1;
+
+        // FIXME
+        //let _ = xmlparse::DO_COMPRESS_WHITESPACE.set(false);
     }
 
-    if let Some(level) = matches.value_of("Compression level") {
-        let level: usize = level.parse().unwrap_or(4);
-        let _ = xmlparse::COMPRESSION_LEVEL.set(level);
+    if let Some(_level) = matches.value_of("Compression level") {
+        eprintln!("DEPRECATED FLAG! whitespace is not compressed in normal behaviour.");
+        return 1;
+
+        // FIXME
+        //let level: usize = level.parse().unwrap_or(4);
+        //let _ = xmlparse::COMPRESSION_LEVEL.set(level);
     }
 
     for file in matches.values_of("FILES").unwrap().collect::<Vec<_>>() {

@@ -35,39 +35,20 @@ mod bindings {
 mod ptr_conversions {
     use super::bindings::xmlChar;
 
-    use crate::WHITESPACE_MAP;
-    use crate::DO_MAP_WHITESPACE;
-    use crate::COMPRESSED_WHITESPACE;
-    use crate::DO_COMPRESS_WHITESPACE;
-    use crate::COMPRESSION_LEVEL;
+    use std::ffi::CStr;
 
-    pub fn string_from_xmlchar_with_null(chars: *const xmlChar) -> String {
-        if chars.is_null() {
-            return String::new();
+    pub fn str_from_xmlchar_with_null<'a>(chars: *const xmlChar) -> &'a str {
+        unsafe {
+            let chars = CStr::from_ptr(chars as *const i8).to_bytes();
+            std::str::from_utf8_unchecked(chars)
         }
-
-        let len = unsafe {
-            let mut i = 0;
-            while *(chars.offset(i)) != b'\0' { i += 1; }
-            i
-        };
-
-        string_from_xmlchar(chars, len)
     }
 
-    pub fn string_from_xmlchar(chars: *const xmlChar, len: isize) -> String {
-        if len < 0 {
-            panic!("Length must be positive.")
-        }
-
-        let len = len as usize;
-        let mut container = String::with_capacity(len);
+    pub fn str_from_xmlchar<'a>(chars: *const xmlChar, len: isize) -> &'a str {
         unsafe {
-            std::ptr::copy(chars, container.as_mut_vec().as_mut_ptr(), len);
-            container.as_mut_vec().set_len(len);
+            let chars = std::slice::from_raw_parts(chars, len as usize);
+            std::str::from_utf8_unchecked(chars)
         }
-
-        container
     }
 
     pub fn vec_from_ptr_with_null(ptr: *mut *const xmlChar) -> Vec<*const xmlChar> {
@@ -89,33 +70,33 @@ mod ptr_conversions {
         container
     }
 
-    fn _translate_whitespace(c: char) -> char {
-        if !DO_MAP_WHITESPACE.get_or_init(|| true) {
-            return c;
-        }
-        *WHITESPACE_MAP.get(&c).unwrap_or(&c)
-    }
+    // TODO: Figuere how to efficiently implement this.
+    // fn _translate_whitespace(c: char) -> char {
+    //     if !DO_MAP_WHITESPACE.get_or_init(|| true) {
+    //         return c;
+    //     }
 
-    fn _compress_whitespace(string: String) -> String {
-        if !DO_COMPRESS_WHITESPACE.get_or_init(|| true) {
-            return string;
-        }
+    //     *WHITESPACE_MAP.get(&c).unwrap_or(&c)
+    // }
 
-        let compressed_string = "␣".repeat(*COMPRESSION_LEVEL.get_or_init(|| 4));
-        string.replace(&compressed_string, &COMPRESSED_WHITESPACE.to_string())
-    }
+    // TODO: Figuere how to efficiently implement this.
+    // fn _compress_whitespace(string: String) -> String {
+    //     if !DO_COMPRESS_WHITESPACE.get_or_init(|| true) {
+    //         return string;
+    //     }
+
+    //     let compressed_string = "␣".repeat(*COMPRESSION_LEVEL.get_or_init(|| 4));
+    //     string.replace(&compressed_string, &COMPRESSED_WHITESPACE.to_string())
+    // }
 }
 
 use bindings::xmlChar;
 use bindings::xmlSAXHandler;
 use bindings::xmlSAXHandlerPtr;
 
-use ptr_conversions::string_from_xmlchar;
-use ptr_conversions::string_from_xmlchar_with_null;
+use ptr_conversions::str_from_xmlchar;
+use ptr_conversions::str_from_xmlchar_with_null;
 use ptr_conversions::vec_from_ptr_with_null;
-
-use crate::WHITESPACE_MAP;
-use crate::COMPRESSED_WHITESPACE;
 
 use crate::parser_data::ParserData;
 use crate::parser_data::XmlTag;
@@ -191,7 +172,7 @@ extern fn sax_start_element(user_data_ptr: *mut c_void, name: *const xmlChar, at
 
     (*user_data).print_last_tag();
 
-    let name = string_from_xmlchar_with_null(name);
+    let name = str_from_xmlchar_with_null(name);
     (*user_data).push_tag(XmlTag::from(name, false));
 
     let attrs = vec_from_ptr_with_null(attrs);
@@ -199,7 +180,7 @@ extern fn sax_start_element(user_data_ptr: *mut c_void, name: *const xmlChar, at
         return;
     }
 
-    let attrs: Vec<String> = attrs.iter().map(|e| string_from_xmlchar_with_null(*e)).collect();
+    let attrs: Vec<&str> = attrs.iter().map(|e| str_from_xmlchar_with_null(*e)).collect();
     let attrs: Vec<String> = attrs.chunks(2).map(|c| format!("{}=\"{}\"", c[0], c[1])).collect();
     let attrs = attrs.join(",");
 
@@ -210,10 +191,10 @@ extern fn sax_start_element(user_data_ptr: *mut c_void, name: *const xmlChar, at
 
 extern fn sax_end_element(user_data_ptr: *mut c_void, name: *const xmlChar) {
     let user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
-    let name = string_from_xmlchar_with_null(name);
+    let name = str_from_xmlchar_with_null(name);
 
     let last = (*user_data).last_tag().unwrap();
-    if last.name() != &name {
+    if last.name() != name {
         return
     }
 
@@ -223,7 +204,7 @@ extern fn sax_end_element(user_data_ptr: *mut c_void, name: *const xmlChar) {
 
 extern fn sax_characters(user_data_ptr: *mut c_void, chars: *const xmlChar, len: i32) {
     let user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
-    let chars = string_from_xmlchar(chars, len as isize);
+    let chars = str_from_xmlchar(chars, len as isize);
     if is_only_whitespace(&chars) {
         return;
     }
@@ -236,8 +217,8 @@ extern fn sax_characters(user_data_ptr: *mut c_void, chars: *const xmlChar, len:
 
 extern fn sax_processing_instruction(user_data_ptr: *mut c_void, target: *const xmlChar, data: *const xmlChar) {
     let user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
-    let target = string_from_xmlchar_with_null(target);
-    let data = string_from_xmlchar_with_null(data);
+    let target = str_from_xmlchar_with_null(target);
+    let data = str_from_xmlchar_with_null(data);
 
     let (tags, write_buf) = (*user_data).tags_and_buf_mut();
     writeln!(write_buf, "{}/{}?[{}]", tags, target, data).unwrap();
@@ -245,22 +226,12 @@ extern fn sax_processing_instruction(user_data_ptr: *mut c_void, target: *const 
 
 extern fn sax_comment(user_data_ptr: *mut c_void, comment: *const xmlChar) {
     let user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
-    let comment = string_from_xmlchar_with_null(comment);
+    let comment = str_from_xmlchar_with_null(comment);
 
     let (tags, write_buf) = (*user_data).tags_and_buf_mut();
     writeln!(write_buf, "{}/![{}]", tags, comment).unwrap();
 }
 
-fn is_only_whitespace(string: &String) -> bool {
-    if string.trim().is_empty() {
-        return true
-    }
-
-    for c in string.chars() {
-        if !WHITESPACE_MAP.values().any(|&val| val == c) && c != COMPRESSED_WHITESPACE {
-            return false;
-        }
-    }
-
-    true
+fn is_only_whitespace(string: &str) -> bool {
+    string.trim().is_empty()
 }
