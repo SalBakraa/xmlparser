@@ -32,7 +32,7 @@ mod bindings {
     include!(concat!(env!("OUT_DIR"), "/sax_funcs.rs"));
 }
 
-mod ptr_conversions {
+pub mod ptr_conversions {
     use super::bindings::xmlChar;
 
     use std::ffi::CStr;
@@ -90,7 +90,7 @@ mod ptr_conversions {
     // }
 }
 
-use bindings::xmlChar;
+pub use bindings::xmlChar;
 use bindings::xmlSAXHandler;
 use bindings::xmlSAXHandlerPtr;
 
@@ -172,7 +172,7 @@ extern fn sax_start_element(user_data_ptr: *mut c_void, name: *const xmlChar, at
 
     (*user_data).print_last_tag();
 
-    let name = str_from_xmlchar_with_null(name);
+    let name = (user_data.ptr_to_str_with_null)(name);
     (*user_data).push_tag(XmlTag::from(name, false));
 
     let attrs = vec_from_ptr_with_null(attrs);
@@ -180,7 +180,7 @@ extern fn sax_start_element(user_data_ptr: *mut c_void, name: *const xmlChar, at
         return;
     }
 
-    let attrs: Vec<&str> = attrs.iter().map(|e| str_from_xmlchar_with_null(*e)).collect();
+    let attrs: Vec<&str> = attrs.iter().map(|e| (user_data.ptr_to_str_with_null)(*e)).collect();
     let attrs: Vec<String> = attrs.chunks(2).map(|c| format!("{}=\"{}\"", c[0], c[1])).collect();
     let attrs = attrs.join(",");
 
@@ -191,7 +191,7 @@ extern fn sax_start_element(user_data_ptr: *mut c_void, name: *const xmlChar, at
 
 extern fn sax_end_element(user_data_ptr: *mut c_void, name: *const xmlChar) {
     let user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
-    let name = str_from_xmlchar_with_null(name);
+    let name = (user_data.ptr_to_str_with_null)(name);
 
     let last = (*user_data).last_tag().unwrap();
     if last.name() != name {
@@ -204,7 +204,7 @@ extern fn sax_end_element(user_data_ptr: *mut c_void, name: *const xmlChar) {
 
 extern fn sax_characters(user_data_ptr: *mut c_void, chars: *const xmlChar, len: i32) {
     let user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
-    let chars = str_from_xmlchar(chars, len as isize);
+    let chars = (user_data.ptr_to_str)(chars, len as isize);
     if is_only_whitespace(&chars) {
         return;
     }
@@ -217,8 +217,8 @@ extern fn sax_characters(user_data_ptr: *mut c_void, chars: *const xmlChar, len:
 
 extern fn sax_processing_instruction(user_data_ptr: *mut c_void, target: *const xmlChar, data: *const xmlChar) {
     let user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
-    let target = str_from_xmlchar_with_null(target);
-    let data = str_from_xmlchar_with_null(data);
+    let target = (user_data.ptr_to_str_with_null)(target);
+    let data = (user_data.ptr_to_str_with_null)(data);
 
     let (tags, write_buf) = (*user_data).tags_and_buf_mut();
     writeln!(write_buf, "{}/{}?[{}]", tags, target, data).unwrap();
@@ -226,7 +226,7 @@ extern fn sax_processing_instruction(user_data_ptr: *mut c_void, target: *const 
 
 extern fn sax_comment(user_data_ptr: *mut c_void, comment: *const xmlChar) {
     let user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
-    let comment = str_from_xmlchar_with_null(comment);
+    let comment = (user_data.ptr_to_str_with_null)(comment);
 
     let (tags, write_buf) = (*user_data).tags_and_buf_mut();
     writeln!(write_buf, "{}/![{}]", tags, comment).unwrap();

@@ -20,6 +20,9 @@ mod xml_tag;
 
 pub use xml_tag::XmlTag;
 
+use crate::sax::xmlChar;
+use crate::sax::ptr_conversions;
+
 use std::io::Write;
 use std::io::{ stdout, Stdout, BufWriter };
 
@@ -29,6 +32,8 @@ pub struct ParserData<'a> {
     result: u32,
     tags: XmlTags<'a>,
     stdout: BufWriter<Stdout>,
+    pub ptr_to_str: fn(*const xmlChar, isize) -> &'a str,
+    pub ptr_to_str_with_null: fn(*const xmlChar) -> &'a str,
 }
 
 impl<'a> ParserData<'a> {
@@ -36,7 +41,9 @@ impl<'a> ParserData<'a> {
         ParserData {
             result: 0,
             tags: XmlTags(Vec::with_capacity(cap)),
-            stdout: BufWriter::new(stdout())
+            stdout: BufWriter::new(stdout()),
+            ptr_to_str: ptr_conversions::str_from_xmlchar,
+            ptr_to_str_with_null: ptr_conversions::str_from_xmlchar_with_null
         }
     }
 
