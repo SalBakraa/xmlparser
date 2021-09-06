@@ -20,8 +20,8 @@ mod xml_tag;
 
 pub use xml_tag::XmlTag;
 
-use crate::sax::xmlChar;
-use crate::sax::ptr_conversions;
+use crate::bindings::xmlChar;
+use crate::ptr_conversions;
 
 use std::io::Write;
 use std::io::{ stdout, Stdout, BufWriter };

@@ -16,87 +16,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-mod bindings {
-    // Since libxml2 does not follow rust's coding conventions
-    #![allow(non_upper_case_globals)]
-    #![allow(non_camel_case_types)]
-    #![allow(non_snake_case)]
+use crate::bindings::{ self, xmlChar };
+use crate::bindings::xmlSAXHandler;
+use crate::bindings::xmlSAXHandlerPtr;
 
-    // The bindings generated contain references to types without stable ABIs
-    #![allow(improper_ctypes)]
-
-    // Most functions generated are not used
-    #![allow(dead_code)]
-
-    include!(concat!(env!("OUT_DIR"), "/parser.rs"));
-    include!(concat!(env!("OUT_DIR"), "/sax_funcs.rs"));
-}
-
-pub mod ptr_conversions {
-    use super::bindings::xmlChar;
-
-    use std::ffi::CStr;
-
-    pub fn str_from_xmlchar_with_null<'a>(chars: *const xmlChar) -> &'a str {
-        unsafe {
-            let chars = CStr::from_ptr(chars as *const i8).to_bytes();
-            std::str::from_utf8_unchecked(chars)
-        }
-    }
-
-    pub fn str_from_xmlchar<'a>(chars: *const xmlChar, len: isize) -> &'a str {
-        unsafe {
-            let chars = std::slice::from_raw_parts(chars, len as usize);
-            std::str::from_utf8_unchecked(chars)
-        }
-    }
-
-    pub fn vec_from_ptr_with_null(ptr: *mut *const xmlChar) -> Vec<*const xmlChar> {
-        if ptr.is_null() {
-            return Vec::new();
-        }
-
-        let len = unsafe {
-            let mut i = 0;
-            while !(*ptr.add(i)).is_null() { i += 1; }
-            i
-        };
-
-        let mut container = Vec::with_capacity(len);
-        unsafe {
-            std::ptr::copy(ptr, container.as_mut_ptr(), len);
-            container.set_len(len);
-        }
-        container
-    }
-
-    // TODO: Figuere how to efficiently implement this.
-    // fn _translate_whitespace(c: char) -> char {
-    //     if !DO_MAP_WHITESPACE.get_or_init(|| true) {
-    //         return c;
-    //     }
-
-    //     *WHITESPACE_MAP.get(&c).unwrap_or(&c)
-    // }
-
-    // TODO: Figuere how to efficiently implement this.
-    // fn _compress_whitespace(string: String) -> String {
-    //     if !DO_COMPRESS_WHITESPACE.get_or_init(|| true) {
-    //         return string;
-    //     }
-
-    //     let compressed_string = "␣".repeat(*COMPRESSION_LEVEL.get_or_init(|| 4));
-    //     string.replace(&compressed_string, &COMPRESSED_WHITESPACE.to_string())
-    // }
-}
-
-pub use bindings::xmlChar;
-use bindings::xmlSAXHandler;
-use bindings::xmlSAXHandlerPtr;
-
-use ptr_conversions::str_from_xmlchar;
-use ptr_conversions::str_from_xmlchar_with_null;
-use ptr_conversions::vec_from_ptr_with_null;
+use crate::ptr_conversions::vec_from_ptr_with_null;
 
 use crate::parser_data::ParserData;
 use crate::parser_data::XmlTag;
