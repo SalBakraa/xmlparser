@@ -170,10 +170,10 @@ fn deref_mut_void_ptr<'a, T>(ptr: *mut c_void) -> &'a mut T {
 extern fn sax_start_element(user_data_ptr: *mut c_void, name: *const xmlChar, attrs: *mut *const xmlChar) {
     let user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
 
-    (*user_data).print_last_tag();
+    user_data.print_last_tag();
 
     let name = (user_data.ptr_to_str_with_null)(name);
-    (*user_data).push_tag(XmlTag::from(name, false));
+    user_data.push_tag(XmlTag::from(name, false));
 
     let attrs = vec_from_ptr_with_null(attrs);
     if attrs.is_empty() {
@@ -184,22 +184,22 @@ extern fn sax_start_element(user_data_ptr: *mut c_void, name: *const xmlChar, at
     let attrs: Vec<String> = attrs.chunks(2).map(|c| format!("{}=\"{}\"", c[0], c[1])).collect();
     let attrs = attrs.join(",");
 
-    let (tags, write_buf) = (*user_data).tags_and_buf_mut();
+    let (tags, write_buf) = user_data.tags_and_buf_mut();
     writeln!(write_buf, "{}@[{}]", tags, attrs).unwrap();
-    (*user_data).last_tag_mut().unwrap().set_printed(true);
+    user_data.last_tag_mut().unwrap().set_printed(true);
 }
 
 extern fn sax_end_element(user_data_ptr: *mut c_void, name: *const xmlChar) {
     let user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
     let name = (user_data.ptr_to_str_with_null)(name);
 
-    let last = (*user_data).last_tag().unwrap();
+    let last = user_data.last_tag().unwrap();
     if last.name() != name {
         return
     }
 
-    (*user_data).print_last_tag();
-    (*user_data).pop_tag();
+    user_data.print_last_tag();
+    user_data.pop_tag();
 }
 
 extern fn sax_characters(user_data_ptr: *mut c_void, chars: *const xmlChar, len: i32) {
@@ -209,10 +209,10 @@ extern fn sax_characters(user_data_ptr: *mut c_void, chars: *const xmlChar, len:
         return;
     }
 
-    let (tags, write_buf) = (*user_data).tags_and_buf_mut();
+    let (tags, write_buf) = user_data.tags_and_buf_mut();
     writeln!(write_buf, "{}=\"{}\"", tags, chars).unwrap();
 
-    (*user_data).last_tag_mut().unwrap().set_printed(true);
+    user_data.last_tag_mut().unwrap().set_printed(true);
 }
 
 extern fn sax_processing_instruction(user_data_ptr: *mut c_void, target: *const xmlChar, data: *const xmlChar) {
@@ -220,7 +220,7 @@ extern fn sax_processing_instruction(user_data_ptr: *mut c_void, target: *const 
     let target = (user_data.ptr_to_str_with_null)(target);
     let data = (user_data.ptr_to_str_with_null)(data);
 
-    let (tags, write_buf) = (*user_data).tags_and_buf_mut();
+    let (tags, write_buf) = user_data.tags_and_buf_mut();
     writeln!(write_buf, "{}/{}?[{}]", tags, target, data).unwrap();
 }
 
@@ -228,7 +228,7 @@ extern fn sax_comment(user_data_ptr: *mut c_void, comment: *const xmlChar) {
     let user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
     let comment = (user_data.ptr_to_str_with_null)(comment);
 
-    let (tags, write_buf) = (*user_data).tags_and_buf_mut();
+    let (tags, write_buf) = user_data.tags_and_buf_mut();
     writeln!(write_buf, "{}/![{}]", tags, comment).unwrap();
 }
 
