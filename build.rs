@@ -18,7 +18,7 @@ use clap::{ crate_name, Shell };
 
 //Relative to build.rs location
 static C_DIRECTORY: &str = "src/c";
-static HEADERS_DIRECTORY: &str = "src/headers";
+static HEADERS_DIRECTORY: &str = "src/c/include";
 static BUILD_MODULES: &str = "build";
 
 fn main() {
@@ -51,7 +51,9 @@ fn main() {
     println!("cargo:rerun-if-changed={}", BUILD_MODULES);
 
     let c_files: Vec<PathBuf> = fs::read_dir(C_DIRECTORY).unwrap()
-        .into_iter().map(|f| f.unwrap().path()).collect();
+        .map(|e| e.unwrap().path())
+        .filter(|e| e.as_path().as_os_str() != HEADERS_DIRECTORY)
+        .collect();
 
     cc::Build::new()
         // Suppress unused parameter warnings
@@ -59,7 +61,7 @@ fn main() {
         // Suppress unused function warnings
         .flag("-Wno-unused-function")
         // Include path to header files
-        .include(HEADERS_DIRECTORY)
+        .flag("-iquote").flag(HEADERS_DIRECTORY)
         .files(c_files)
         .compile("xmlparse");
 

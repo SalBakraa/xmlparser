@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include <sax_funcs.h>
+#include "sax_funcs.h"
 
 void sax_warning(void* user_data_ptr, const char* msg, ...) {
     fprintf(stderr, "Warning!: ");
