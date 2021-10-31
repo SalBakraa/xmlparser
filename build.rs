@@ -13,6 +13,7 @@ use pkgbuild::write_pkgbuild;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
+use std::path::Path;
 
 use clap::{ crate_name, Shell };
 
@@ -62,12 +63,13 @@ fn main() {
         .flag("-Wno-unused-function")
         // Include path to header files
         .flag("-iquote").flag(HEADERS_DIRECTORY)
+        .include("/usr/include/libxml2")
         .files(c_files)
         .compile("xmlparse");
 
-    let headers = fs::read_dir(HEADERS_DIRECTORY).unwrap();
-    for header in headers {
-        let mut header = header.unwrap().path();
+    let headers = recursive_read_dir(HEADERS_DIRECTORY);
+    for mut header in headers {
+        //let mut header = header.unwrap().path();
 
         let bindings = bindgen::Builder::default()
             // Use types defined in core
@@ -99,4 +101,23 @@ fn main() {
 
     #[cfg(feature="pkgbuild")]
     write_pkgbuild().unwrap();
+}
+
+fn recursive_read_dir<P: AsRef<Path>>(path: P) -> Vec<PathBuf> {
+    let mut entries: Vec<PathBuf> = fs::read_dir(path).unwrap().map(|e| e.unwrap().path()).collect();
+
+    let mut dirs = Vec::with_capacity(entries.len());
+    let mut i = 0;
+    while i < entries.len() {
+        if entries[i].is_dir() {
+            dirs.push(entries.remove(i));
+        } else {
+            i += 1;
+        }
+    }
+
+    let mut dirs: Vec<_> = dirs.iter().map(|d| recursive_read_dir(d)).collect();
+    dirs.iter_mut().for_each(|d| entries.extend(d.drain(..)));
+
+    entries
 }
