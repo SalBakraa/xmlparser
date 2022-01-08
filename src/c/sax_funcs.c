@@ -22,25 +22,25 @@
 #include "sax_funcs.h"
 
 void sax_warning(void* user_data_ptr, const char* msg, ...) {
-    fprintf(stderr, "Warning!: ");
+	fprintf(stderr, "Warning!: ");
 
-    va_list args;
-    va_start(args, msg);
-    vfprintf(stderr, msg, args);
+	va_list args;
+	va_start(args, msg);
+	vfprintf(stderr, msg, args);
 }
 
 void sax_error(void* user_data_ptr, const char* msg, ...) {
-    fprintf(stderr, "Error!: ");
+	fprintf(stderr, "Error!: ");
 
-    va_list args;
-    va_start(args, msg);
-    vfprintf(stderr, msg, args);
+	va_list args;
+	va_start(args, msg);
+	vfprintf(stderr, msg, args);
 }
 
 void sax_fatal_error(void* user_data_ptr, const char* msg, ...) {
-    fprintf(stderr, "Fatal Error!: ");
+	fprintf(stderr, "Fatal Error!: ");
 
-    va_list args;
-    va_start(args, msg);
-    vfprintf(stderr, msg, args);
+	va_list args;
+	va_start(args, msg);
+	vfprintf(stderr, msg, args);
 }

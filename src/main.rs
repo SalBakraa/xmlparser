@@ -21,48 +21,48 @@ mod cli;
 use cli::build_cli;
 
 fn main() {
-    let exit_code = real_main();
-    std::process::exit(exit_code);
+	let exit_code = real_main();
+	std::process::exit(exit_code);
 }
 
 fn real_main() -> i32 {
-    let app = build_cli();
-    let matches = app.get_matches();
+	let app = build_cli();
+	let matches = app.get_matches();
 
-    if matches.is_present("print whitespace map") {
-        xmlparse::print_whitespace_mappings();
-        return 0;
-    }
+	if matches.is_present("print whitespace map") {
+		xmlparse::print_whitespace_mappings();
+		return 0;
+	}
 
-    if matches.is_present("No whitespace mapping") {
-        eprintln!("DEPRECATED FLAG! whitespace is not replaced in normal behaviour.");
-        return 1;
+	if matches.is_present("No whitespace mapping") {
+		eprintln!("DEPRECATED FLAG! whitespace is not replaced in normal behaviour.");
+		return 1;
 
-        // FIXME
-        //let _ = xmlparse::DO_MAP_WHITESPACE.set(false);
-        //let _ = xmlparse::DO_COMPRESS_WHITESPACE.set(false);
-    }
+		// FIXME
+		//let _ = xmlparse::DO_MAP_WHITESPACE.set(false);
+		//let _ = xmlparse::DO_COMPRESS_WHITESPACE.set(false);
+	}
 
-    if matches.is_present("No whitespace compressing") {
-        eprintln!("DEPRECATED FLAG! whitespace is not compressed in normal behaviour.");
-        return 1;
+	if matches.is_present("No whitespace compressing") {
+		eprintln!("DEPRECATED FLAG! whitespace is not compressed in normal behaviour.");
+		return 1;
 
-        // FIXME
-        //let _ = xmlparse::DO_COMPRESS_WHITESPACE.set(false);
-    }
+		// FIXME
+		//let _ = xmlparse::DO_COMPRESS_WHITESPACE.set(false);
+	}
 
-    if let Some(_level) = matches.value_of("Compression level") {
-        eprintln!("DEPRECATED FLAG! whitespace is not compressed in normal behaviour.");
-        return 1;
+	if let Some(_level) = matches.value_of("Compression level") {
+		eprintln!("DEPRECATED FLAG! whitespace is not compressed in normal behaviour.");
+		return 1;
 
-        // FIXME
-        //let level: usize = level.parse().unwrap_or(4);
-        //let _ = xmlparse::COMPRESSION_LEVEL.set(level);
-    }
+		// FIXME
+		//let level: usize = level.parse().unwrap_or(4);
+		//let _ = xmlparse::COMPRESSION_LEVEL.set(level);
+	}
 
-    for file in matches.values_of("FILES").unwrap().collect::<Vec<_>>() {
-        xmlparse::print_nodes(file.to_owned());
-    }
+	for file in matches.values_of("FILES").unwrap().collect::<Vec<_>>() {
+		xmlparse::print_nodes(file.to_owned());
+	}
 
-    0
+	0
 }

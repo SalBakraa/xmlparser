@@ -18,30 +18,30 @@
 
 #[derive(Default)]
 pub struct XmlTag<'a> {
-    name: &'a str,
-    printed: bool,
+	name: &'a str,
+	printed: bool,
 }
 
 impl<'a> XmlTag<'a> {
-    pub fn from(name: &'a str, printed: bool) -> Self {
-        XmlTag { name, printed }
-    }
+	pub fn from(name: &'a str, printed: bool) -> Self {
+		XmlTag { name, printed }
+	}
 
-    pub fn printed(&self) -> bool {
-        self.printed
-    }
+	pub fn printed(&self) -> bool {
+		self.printed
+	}
 
-    pub fn set_printed(&mut self, val: bool) {
-        self.printed = val;
-    }
+	pub fn set_printed(&mut self, val: bool) {
+		self.printed = val;
+	}
 
-    pub fn name(&self) -> &'a str {
-        &self.name
-    }
+	pub fn name(&self) -> &'a str {
+		&self.name
+	}
 }
 
 impl<'a> std::fmt::Display for XmlTag<'a> {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}", self.name)
-    }
+	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+		write!(f, "{}", self.name)
+	}
 }
