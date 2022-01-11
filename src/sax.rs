@@ -73,6 +73,7 @@ pub fn init_sax_handler(sax: xmlSAXHandlerPtr) {
 		(*sax).startElement = Some(sax_start_element);
 		(*sax).endElement = Some(sax_end_element);
 		(*sax).characters = Some(sax_characters);
+		(*sax).ignorableWhitespace = Some(sax_characters);
 		(*sax).processingInstruction = Some(sax_processing_instruction);
 		(*sax).comment = Some(sax_comment);
 		(*sax).warning = Some(bindings::sax_warning);
