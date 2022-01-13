@@ -29,8 +29,6 @@ use crate::parser_data::XmlTag;
 
 use crate::config::ProgramOpts;
 
-use std::ffi::CString;
-use std::ptr::null_mut;
 use std::io::Write;
 
 use cty::c_void;
@@ -65,7 +63,7 @@ pub fn default_sax_handler() -> xmlSAXHandler {
 		cdataBlock: None,
 		externalSubset: None,
 		initialized: 0,
-		_private: null_mut::<c_void>(),
+		_private: std::ptr::null_mut::<c_void>(),
 		startElementNs: None,
 		endElementNs: None,
 		serror: None,
@@ -87,7 +85,7 @@ pub fn init_sax_handler(sax: xmlSAXHandlerPtr) {
 	}
 }
 
-pub fn sax_user_parse_file(sax: xmlSAXHandlerPtr, data_ptr: *mut c_void, file: CString) {
+pub fn sax_user_parse_file(sax: xmlSAXHandlerPtr, data_ptr: *mut c_void, file: std::ffi::CString) {
 	unsafe { bindings::xmlSAXUserParseFile(sax, data_ptr, file.into_raw()); }
 }
 

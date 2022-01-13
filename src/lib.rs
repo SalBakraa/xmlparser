@@ -35,11 +35,9 @@ mod bindings {
 mod ptr_conversions {
 	use crate::bindings::xmlChar;
 
-	use std::ffi::CStr;
-
 	pub fn str_from_xmlchar_with_null<'a>(chars: *const xmlChar) -> &'a str {
 		unsafe {
-			let chars = CStr::from_ptr(chars as *const i8).to_bytes();
+			let chars = std::ffi::CStr::from_ptr(chars as *const i8).to_bytes();
 			std::str::from_utf8_unchecked(chars)
 		}
 	}
@@ -69,19 +67,13 @@ mod config;
 
 pub use config::ProgramOpts;
 
-use parser_data::ParserData;
-
-use std::ffi::CString;
-
-use cty::c_void;
-
 pub fn print_nodes(file: String, opts: &ProgramOpts) {
-	let file = CString::new(file).unwrap();
+	let file = std::ffi::CString::new(file).unwrap();
 
 	let mut handler = sax::default_sax_handler();
 	sax::init_sax_handler(&mut handler);
 
-	let mut data = ParserData::with_capacity(10, opts);
-	let data_ptr = &mut data as *mut _ as *mut c_void;
+	let mut data = parser_data::ParserData::with_capacity(10, opts);
+	let data_ptr = &mut data as *mut _ as *mut cty::c_void;
 	sax::sax_user_parse_file(&mut handler, data_ptr, file);
 }

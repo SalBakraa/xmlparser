@@ -18,8 +18,6 @@
 
 mod cli;
 
-use cli::build_cli;
-
 fn main() {
 	let exit_code = real_main();
 	std::process::exit(exit_code);
@@ -28,7 +26,7 @@ fn main() {
 fn real_main() -> i32 {
 	let mut opts = xmlparse::ProgramOpts::default();
 
-	let app = build_cli();
+	let app = cli::build_cli();
 	let matches = app.get_matches();
 
 	// if matches.is_present("print whitespace map") {
