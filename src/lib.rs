@@ -17,6 +17,10 @@
  */
 
 mod defaults {
+	pub static TAB_MAP: char = '→';
+	pub static SPACE_MAP: char = '␣';
+	pub static NEWLINE_MAP: char = '↵';
+
 	pub static COMPRESS_LEVEL: fn() -> usize = || { 4 };
 	pub static MAP_WHITESPACE: fn() -> bool = || { true };
 	pub static COMPRESS_WHITESPACE: fn() -> bool = || { true };
@@ -110,14 +114,7 @@ use once_cell::sync::OnceCell;
 
 pub static MAP_WHITESPACE: OnceCell<bool> = OnceCell::new();
 pub static COMPRESS_WHITESPACE: OnceCell<bool> = OnceCell::new();
-
 pub static COMPRESSION_LEVEL: OnceCell<usize> = OnceCell::new();
-
-static COMPRESSED_WHITESPACE: char = '·';
-
-pub fn print_whitespace_mappings() {
-	println!("{}|{}", "No map sorry :(", COMPRESSED_WHITESPACE);
-}
 
 pub fn print_nodes(file: String) {
 	let file = CString::new(file).unwrap();

@@ -29,33 +29,23 @@ fn real_main() -> i32 {
 	let app = build_cli();
 	let matches = app.get_matches();
 
-	if matches.is_present("print whitespace map") {
-		xmlparse::print_whitespace_mappings();
-		return 0;
-	}
+	// if matches.is_present("print whitespace map") {
+	// 	xmlparse::print_whitespace_mappings();
+	// 	return 0;
+	// }
 
 	if matches.is_present("No whitespace mapping") {
 		let _ = xmlparse::MAP_WHITESPACE.set(false);
-
-		// FIXME
-		//let _ = xmlparse::DO_COMPRESS_WHITESPACE.set(false);
+		let _ = xmlparse::COMPRESS_WHITESPACE.set(false);
 	}
 
 	if matches.is_present("No whitespace compressing") {
-		eprintln!("DEPRECATED FLAG! whitespace is not compressed in normal behaviour.");
-		return 1;
-
-		// FIXME
-		//let _ = xmlparse::DO_COMPRESS_WHITESPACE.set(false);
+		let _ = xmlparse::COMPRESS_WHITESPACE.set(false);
 	}
 
-	if let Some(_level) = matches.value_of("Compression level") {
-		eprintln!("DEPRECATED FLAG! whitespace is not compressed in normal behaviour.");
-		return 1;
-
-		// FIXME
-		//let level: usize = level.parse().unwrap_or(4);
-		//let _ = xmlparse::COMPRESSION_LEVEL.set(level);
+	if let Some(level) = matches.value_of("Compression level") {
+		let level: usize = level.parse().unwrap();
+		let _ = xmlparse::COMPRESSION_LEVEL.set(level);
 	}
 
 	for file in matches.values_of("FILES").unwrap().collect::<Vec<_>>() {

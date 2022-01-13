@@ -19,7 +19,7 @@
 use crate::MAP_WHITESPACE;
 use crate::COMPRESS_WHITESPACE;
 
-use crate::defaults;
+use crate::defaults::{ self, SPACE_MAP, TAB_MAP, NEWLINE_MAP };
 
 use crate::bindings::{ self, xmlChar };
 use crate::bindings::xmlSAXHandler;
@@ -118,7 +118,7 @@ extern fn sax_start_element(user_data_ptr: *mut c_void, name: *const xmlChar, at
 	write!(write_buf, "{}@[", tags).unwrap();
 	for i in (0..attrs.len()).step_by(2) {
 		write!(write_buf, "{}=", attrs[i]).unwrap();
-		print_string(write_buf, attrs[i + 1]);
+		print_string(write_buf, attrs[i + 1]).unwrap();
 
 		if i != (attrs.len() - 2) {
 			write!(write_buf, ",").unwrap();
@@ -151,7 +151,7 @@ extern fn sax_characters(user_data_ptr: *mut c_void, chars: *const xmlChar, len:
 
 	let (tags, write_buf) = user_data.tags_and_buf_mut();
 	write!(write_buf, "{}=\"", tags).unwrap();
-	print_string(write_buf, chars);
+	print_string(write_buf, chars).unwrap();
 	writeln!(write_buf, "\"").unwrap();
 
 	user_data.last_tag_mut().unwrap().set_printed(true);
@@ -164,7 +164,7 @@ extern fn sax_processing_instruction(user_data_ptr: *mut c_void, target: *const 
 
 	let (tags, write_buf) = user_data.tags_and_buf_mut();
 	write!(write_buf, "{}/{}?[", tags, target).unwrap();
-	print_string(write_buf, data);
+	print_string(write_buf, data).unwrap();
 	writeln!(write_buf, "]").unwrap();
 }
 
@@ -174,7 +174,7 @@ extern fn sax_comment(user_data_ptr: *mut c_void, comment: *const xmlChar) {
 
 	let (tags, write_buf) = user_data.tags_and_buf_mut();
 	write!(write_buf, "{}/![", tags).unwrap();
-	print_string(write_buf, comment);
+	print_string(write_buf, comment).unwrap();
 	writeln!(write_buf, "]").unwrap();
 }
 
@@ -184,21 +184,74 @@ fn is_only_whitespace(string: &str) -> bool {
 }
 
 #[inline(always)]
-pub fn print_string<W: Write>(write_buf: &mut W, string: &str) {
+pub fn print_string<W: Write>(write_buf: &mut W, string: &str) -> Result<(), std::io::Error> {
 	if !MAP_WHITESPACE.get_or_init(defaults::MAP_WHITESPACE)
 			&& !COMPRESS_WHITESPACE.get_or_init(defaults::COMPRESS_WHITESPACE) {
-		write_buf.write_all(string.as_bytes()).unwrap();
-		return;
+		return write_buf.write_all(string.as_bytes());
 	}
 
 	// Shared buffer to translate a char to byte slice
 	let mut buf = [0; 4];
-	for char in string.chars() {
-		write_buf.write(match char {
-			' '  =>  '␣',
-			'\t' =>  '→',
-			'\n' =>  '↵',
-			   _ => char,
-		}.encode_utf8(&mut buf).as_bytes()).unwrap();
+
+	// Map whitespace without compressing
+	if !COMPRESS_WHITESPACE.get_or_init(defaults::COMPRESS_WHITESPACE) {
+		for char in string.chars() {
+			transliterate_and_print(write_buf, char, SPACE_MAP, TAB_MAP, NEWLINE_MAP, &mut buf)?;
+		}
+
+		return Ok(());
 	}
+
+	let (space_char, tab_char, newline_char) = if !MAP_WHITESPACE.get_or_init(defaults::MAP_WHITESPACE) {
+		(' ', '\t', '\n')
+	} else {
+		(SPACE_MAP, TAB_MAP, NEWLINE_MAP)
+	};
+
+	let mut space_count = 0;
+	for char in string.chars() {
+		if char != ' ' {
+			if space_count <= *crate::COMPRESSION_LEVEL.get_or_init(defaults::COMPRESS_LEVEL) {
+			    for _ in 0..space_count {
+			        write_buf.write(char_to_bytes(space_char, &mut buf))?;
+			    }
+			} else {
+				write_buf.write(char_to_bytes(tab_char, &mut buf))?;
+			}
+			space_count = 0;
+
+			transliterate_and_print(write_buf, char, space_char, tab_char, newline_char, &mut buf)?;
+			continue;
+		}
+
+		space_count += 1;
+		if space_count == *crate::COMPRESSION_LEVEL.get_or_init(defaults::COMPRESS_LEVEL) {
+			write_buf.write(char_to_bytes(tab_char, &mut buf))?;
+			space_count = 0;
+		}
+	}
+
+	// Print any spaces that weren't printed
+	for _ in 0..space_count {
+	    write_buf.write(char_to_bytes(space_char, &mut buf))?;
+	}
+
+	Ok(())
+}
+
+#[inline(always)]
+fn transliterate_and_print<W: Write>(write_buf: &mut W, c: char, space: char, tab: char, newline: char, buf: &mut [u8]) -> Result<(), std::io::Error> {
+	write_buf.write(char_to_bytes(match c {
+		' '  =>  space,
+		'\t' =>  tab,
+		'\n' =>  newline,
+		   _ =>  c,
+	}, buf))?;
+
+	Ok(())
+}
+
+#[inline(always)]
+fn char_to_bytes(c: char, buf: &mut [u8]) -> &[u8] {
+	c.encode_utf8(buf).as_bytes()
 }
