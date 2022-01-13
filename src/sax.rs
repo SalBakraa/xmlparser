@@ -94,11 +94,6 @@ pub fn sax_user_parse_file(sax: xmlSAXHandlerPtr, data_ptr: *mut c_void, file: C
 	unsafe { bindings::xmlSAXUserParseFile(sax, data_ptr, file.into_raw()); }
 }
 
-fn deref_mut_void_ptr<'a, T>(ptr: *mut c_void) -> &'a mut T {
-	let ptr = ptr as *mut T;
-	unsafe { &mut *ptr }
-}
-
 extern fn sax_start_element(user_data_ptr: *mut c_void, name: *const xmlChar, attrs: *mut *const xmlChar) {
 	let user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
 
@@ -176,6 +171,12 @@ extern fn sax_comment(user_data_ptr: *mut c_void, comment: *const xmlChar) {
 	write!(write_buf, "{}/![", tags).unwrap();
 	print_string(write_buf, comment).unwrap();
 	writeln!(write_buf, "]").unwrap();
+}
+
+#[inline(always)]
+fn deref_mut_void_ptr<'a, T>(ptr: *mut c_void) -> &'a mut T {
+	let ptr = ptr as *mut T;
+	unsafe { &mut *ptr }
 }
 
 #[inline(always)]
