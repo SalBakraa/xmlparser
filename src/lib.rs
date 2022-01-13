@@ -61,23 +61,13 @@ mod ptr_conversions {
 		}
 	}
 
-	pub fn vec_from_ptr_with_null(ptr: *mut *const xmlChar) -> Vec<*const xmlChar> {
-		if ptr.is_null() {
-			return Vec::new();
-		}
-
-		let len = unsafe {
-			let mut i = 0;
-			while !(*ptr.add(i)).is_null() { i += 1; }
-			i
-		};
-
-		let mut container = Vec::with_capacity(len);
+	pub fn slice_from_ptr_with_null<'a>(ptr: *mut *const xmlChar) -> &'a [*const xmlChar] {
 		unsafe {
-			std::ptr::copy(ptr, container.as_mut_ptr(), len);
-			container.set_len(len);
+			let mut len = 0;
+			while !(*ptr.add(len)).is_null() { len += 1; }
+
+			std::slice::from_raw_parts(ptr, len)
 		}
-		container
 	}
 
 	// TODO: Figuere how to efficiently implement this.

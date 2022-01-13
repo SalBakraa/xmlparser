@@ -27,7 +27,7 @@ use crate::bindings::xmlSAXHandlerPtr;
 
 use crate::ptr_conversions::str_from_xmlchar;
 use crate::ptr_conversions::str_from_xmlchar_with_null;
-use crate::ptr_conversions::vec_from_ptr_with_null;
+use crate::ptr_conversions::slice_from_ptr_with_null;
 
 use crate::parser_data::ParserData;
 use crate::parser_data::XmlTag;
@@ -102,11 +102,11 @@ extern fn sax_start_element(user_data_ptr: *mut c_void, name: *const xmlChar, at
 	let name = str_from_xmlchar_with_null(name);
 	user_data.push_tag(XmlTag::from(name, false));
 
-	let attrs = vec_from_ptr_with_null(attrs);
-	if attrs.is_empty() {
+	if attrs.is_null() {
 		return;
 	}
 
+	let attrs = slice_from_ptr_with_null(attrs);
 	let attrs: Vec<&str> = attrs.iter().map(|e| str_from_xmlchar_with_null(*e)).collect();
 
 	let (tags, write_buf) = user_data.tags_and_buf_mut();
