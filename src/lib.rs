@@ -97,30 +97,20 @@ mod parser_data;
 use parser_data::ParserData;
 
 use std::ffi::CString;
-use std::iter::FromIterator;
 
 use cty::c_void;
 
-use phf::{ phf_map, Map };
-
 use once_cell::sync::OnceCell;
 
-pub static DO_MAP_WHITESPACE: OnceCell<bool> = OnceCell::new();
-pub static DO_COMPRESS_WHITESPACE: OnceCell<bool> = OnceCell::new();
+pub static MAP_WHITESPACE: OnceCell<bool> = OnceCell::new();
+pub static COMPRESS_WHITESPACE: OnceCell<bool> = OnceCell::new();
 
 pub static COMPRESSION_LEVEL: OnceCell<usize> = OnceCell::new();
-
-static WHITESPACE_MAP: Map<char, char> = phf_map! {
-	' ' => '␣',
-	'\t' => '→',
-	'\n' => '↵',
-};
 
 static COMPRESSED_WHITESPACE: char = '·';
 
 pub fn print_whitespace_mappings() {
-	let map = String::from_iter(WHITESPACE_MAP.values());
-	println!("{}|{}", map, COMPRESSED_WHITESPACE);
+	println!("{}|{}", "No map sorry :(", COMPRESSED_WHITESPACE);
 }
 
 pub fn print_nodes(file: String) {

@@ -108,11 +108,19 @@ extern fn sax_start_element(user_data_ptr: *mut c_void, name: *const xmlChar, at
 	}
 
 	let attrs: Vec<&str> = attrs.iter().map(|e| str_from_xmlchar_with_null(*e)).collect();
-	let attrs: Vec<String> = attrs.chunks(2).map(|c| format!("{}=\"{}\"", c[0], c[1])).collect();
-	let attrs = attrs.join(",");
 
 	let (tags, write_buf) = user_data.tags_and_buf_mut();
-	writeln!(write_buf, "{}@[{}]", tags, attrs).unwrap();
+	write!(write_buf, "{}@[", tags).unwrap();
+	for i in (0..attrs.len()).step_by(2) {
+		write!(write_buf, "{}=", attrs[i]).unwrap();
+		print_string(write_buf, attrs[i + 1]);
+
+		if i != (attrs.len() - 2) {
+			write!(write_buf, ",").unwrap();
+		}
+	}
+	writeln!(write_buf, "]").unwrap();
+
 	user_data.last_tag_mut().unwrap().set_printed(true);
 }
 
@@ -137,7 +145,9 @@ extern fn sax_characters(user_data_ptr: *mut c_void, chars: *const xmlChar, len:
 	}
 
 	let (tags, write_buf) = user_data.tags_and_buf_mut();
-	writeln!(write_buf, "{}=\"{}\"", tags, chars).unwrap();
+	write!(write_buf, "{}=\"", tags).unwrap();
+	print_string(write_buf, chars);
+	writeln!(write_buf, "\"").unwrap();
 
 	user_data.last_tag_mut().unwrap().set_printed(true);
 }
@@ -148,7 +158,9 @@ extern fn sax_processing_instruction(user_data_ptr: *mut c_void, target: *const 
 	let data = str_from_xmlchar_with_null(data);
 
 	let (tags, write_buf) = user_data.tags_and_buf_mut();
-	writeln!(write_buf, "{}/{}?[{}]", tags, target, data).unwrap();
+	write!(write_buf, "{}/{}?[", tags, target).unwrap();
+	print_string(write_buf, data);
+	writeln!(write_buf, "]").unwrap();
 }
 
 extern fn sax_comment(user_data_ptr: *mut c_void, comment: *const xmlChar) {
@@ -156,9 +168,30 @@ extern fn sax_comment(user_data_ptr: *mut c_void, comment: *const xmlChar) {
 	let comment = str_from_xmlchar_with_null(comment);
 
 	let (tags, write_buf) = user_data.tags_and_buf_mut();
-	writeln!(write_buf, "{}/![{}]", tags, comment).unwrap();
+	write!(write_buf, "{}/![", tags).unwrap();
+	print_string(write_buf, comment);
+	writeln!(write_buf, "]").unwrap();
 }
 
+#[inline(always)]
 fn is_only_whitespace(string: &str) -> bool {
 	string.trim().is_empty()
+}
+
+#[inline(always)]
+fn print_string<W: Write>(write_buf: &mut W, string: &str) {
+	if !crate::MAP_WHITESPACE.get_or_init(|| true) {
+		write_buf.write_all(string.as_bytes()).unwrap();
+		return;
+	}
+
+	let mut buf = [0; 4];
+	for char in string.chars() {
+		write_buf.write(match char {
+			' '  =>  '␣',
+			'\t' =>  '→',
+			'\n' =>  '↵',
+			   _ => char,
+		}.encode_utf8(&mut buf).as_bytes()).unwrap();
+	}
 }

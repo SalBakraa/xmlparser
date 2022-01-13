@@ -35,11 +35,9 @@ fn real_main() -> i32 {
 	}
 
 	if matches.is_present("No whitespace mapping") {
-		eprintln!("DEPRECATED FLAG! whitespace is not replaced in normal behaviour.");
-		return 1;
+		let _ = xmlparse::MAP_WHITESPACE.set(false);
 
 		// FIXME
-		//let _ = xmlparse::DO_MAP_WHITESPACE.set(false);
 		//let _ = xmlparse::DO_COMPRESS_WHITESPACE.set(false);
 	}
 
