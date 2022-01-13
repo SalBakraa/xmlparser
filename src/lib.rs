@@ -16,16 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-mod defaults {
-	pub static TAB_MAP: char = '→';
-	pub static SPACE_MAP: char = '␣';
-	pub static NEWLINE_MAP: char = '↵';
-
-	pub static COMPRESS_LEVEL: fn() -> usize = || { 4 };
-	pub static MAP_WHITESPACE: fn() -> bool = || { true };
-	pub static COMPRESS_WHITESPACE: fn() -> bool = || { true };
-}
-
 mod bindings {
 	// Since libxml2 does not follow rust's coding conventions
 	#![allow(non_upper_case_globals)]
@@ -75,25 +65,23 @@ mod sax;
 
 mod parser_data;
 
+mod config;
+
+pub use config::ProgramOpts;
+
 use parser_data::ParserData;
 
 use std::ffi::CString;
 
 use cty::c_void;
 
-use once_cell::sync::OnceCell;
-
-pub static MAP_WHITESPACE: OnceCell<bool> = OnceCell::new();
-pub static COMPRESS_WHITESPACE: OnceCell<bool> = OnceCell::new();
-pub static COMPRESSION_LEVEL: OnceCell<usize> = OnceCell::new();
-
-pub fn print_nodes(file: String) {
+pub fn print_nodes(file: String, opts: &ProgramOpts) {
 	let file = CString::new(file).unwrap();
 
 	let mut handler = sax::default_sax_handler();
 	sax::init_sax_handler(&mut handler);
 
-	let mut data = ParserData::with_capacity(10);
+	let mut data = ParserData::with_capacity(10, opts);
 	let data_ptr = &mut data as *mut _ as *mut c_void;
 	sax::sax_user_parse_file(&mut handler, data_ptr, file);
 }

@@ -20,6 +20,8 @@ mod xml_tag;
 
 pub use xml_tag::XmlTag;
 
+use crate::config::ProgramOpts;
+
 use std::io::Write;
 use std::io::{ stdout, Stdout, BufWriter };
 
@@ -27,21 +29,23 @@ pub struct XmlTags<'a>(Vec<XmlTag<'a>>);
 
 pub struct ParserData<'a> {
 	result: u32,
+	opts: &'a ProgramOpts,
 	tags: XmlTags<'a>,
 	stdout: BufWriter<Stdout>,
 }
 
 impl<'a> ParserData<'a> {
-	pub fn with_capacity(cap: usize) -> Self {
+	pub fn with_capacity(cap: usize, opts: &'a ProgramOpts) -> Self {
 		ParserData {
 			result: 0,
+			opts,
 			tags: XmlTags(Vec::with_capacity(cap)),
 			stdout: BufWriter::new(stdout()),
 		}
 	}
 
-	pub fn tags_and_buf_mut(&mut self) -> (&mut XmlTags<'a>, &mut BufWriter<Stdout>) {
-		(&mut self.tags, &mut self.stdout)
+	pub fn opts_tags_and_buf_mut(&mut self) -> (&ProgramOpts, &mut XmlTags<'a>, &mut BufWriter<Stdout>) {
+		(self.opts, &mut self.tags, &mut self.stdout)
 	}
 
 	pub fn last_tag(&self) -> Option<&XmlTag<'a>> {

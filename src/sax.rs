@@ -16,11 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use crate::MAP_WHITESPACE;
-use crate::COMPRESS_WHITESPACE;
-
-use crate::defaults::{ self, SPACE_MAP, TAB_MAP, NEWLINE_MAP };
-
 use crate::bindings::{ self, xmlChar };
 use crate::bindings::xmlSAXHandler;
 use crate::bindings::xmlSAXHandlerPtr;
@@ -31,6 +26,8 @@ use crate::ptr_conversions::slice_from_ptr_with_null;
 
 use crate::parser_data::ParserData;
 use crate::parser_data::XmlTag;
+
+use crate::config::ProgramOpts;
 
 use std::ffi::CString;
 use std::ptr::null_mut;
@@ -109,11 +106,11 @@ extern fn sax_start_element(user_data_ptr: *mut c_void, name: *const xmlChar, at
 	let attrs = slice_from_ptr_with_null(attrs);
 	let attrs: Vec<&str> = attrs.iter().map(|e| str_from_xmlchar_with_null(*e)).collect();
 
-	let (tags, write_buf) = user_data.tags_and_buf_mut();
+	let (opts, tags, write_buf) = user_data.opts_tags_and_buf_mut();
 	write!(write_buf, "{}@[", tags).unwrap();
 	for i in (0..attrs.len()).step_by(2) {
 		write!(write_buf, "{}=", attrs[i]).unwrap();
-		print_string(write_buf, attrs[i + 1]).unwrap();
+		print_string(write_buf, attrs[i + 1], opts).unwrap();
 
 		if i != (attrs.len() - 2) {
 			write!(write_buf, ",").unwrap();
@@ -144,9 +141,9 @@ extern fn sax_characters(user_data_ptr: *mut c_void, chars: *const xmlChar, len:
 		return;
 	}
 
-	let (tags, write_buf) = user_data.tags_and_buf_mut();
+	let (opts, tags, write_buf) = user_data.opts_tags_and_buf_mut();
 	write!(write_buf, "{}=\"", tags).unwrap();
-	print_string(write_buf, chars).unwrap();
+	print_string(write_buf, chars, opts).unwrap();
 	writeln!(write_buf, "\"").unwrap();
 
 	user_data.last_tag_mut().unwrap().set_printed(true);
@@ -157,9 +154,9 @@ extern fn sax_processing_instruction(user_data_ptr: *mut c_void, target: *const 
 	let target = str_from_xmlchar_with_null(target);
 	let data = str_from_xmlchar_with_null(data);
 
-	let (tags, write_buf) = user_data.tags_and_buf_mut();
+	let (opts, tags, write_buf) = user_data.opts_tags_and_buf_mut();
 	write!(write_buf, "{}/{}?[", tags, target).unwrap();
-	print_string(write_buf, data).unwrap();
+	print_string(write_buf, data, opts).unwrap();
 	writeln!(write_buf, "]").unwrap();
 }
 
@@ -167,9 +164,9 @@ extern fn sax_comment(user_data_ptr: *mut c_void, comment: *const xmlChar) {
 	let user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
 	let comment = str_from_xmlchar_with_null(comment);
 
-	let (tags, write_buf) = user_data.tags_and_buf_mut();
+	let (opts, tags, write_buf) = user_data.opts_tags_and_buf_mut();
 	write!(write_buf, "{}/![", tags).unwrap();
-	print_string(write_buf, comment).unwrap();
+	print_string(write_buf, comment, opts).unwrap();
 	writeln!(write_buf, "]").unwrap();
 }
 
@@ -185,9 +182,8 @@ fn is_only_whitespace(string: &str) -> bool {
 }
 
 #[inline(always)]
-pub fn print_string<W: Write>(write_buf: &mut W, string: &str) -> Result<(), std::io::Error> {
-	if !MAP_WHITESPACE.get_or_init(defaults::MAP_WHITESPACE)
-			&& !COMPRESS_WHITESPACE.get_or_init(defaults::COMPRESS_WHITESPACE) {
+pub fn print_string<W: Write>(write_buf: &mut W, string: &str, opts: &ProgramOpts) -> Result<(), std::io::Error> {
+	if !opts.map_whitespace && !opts.compress_whitespace {
 		return write_buf.write_all(string.as_bytes());
 	}
 
@@ -195,24 +191,24 @@ pub fn print_string<W: Write>(write_buf: &mut W, string: &str) -> Result<(), std
 	let mut buf = [0; 4];
 
 	// Map whitespace without compressing
-	if !COMPRESS_WHITESPACE.get_or_init(defaults::COMPRESS_WHITESPACE) {
+	if !opts.compress_whitespace {
 		for char in string.chars() {
-			transliterate_and_print(write_buf, char, SPACE_MAP, TAB_MAP, NEWLINE_MAP, &mut buf)?;
+			transliterate_and_print(write_buf, char, opts.space_map, opts.tab_map, opts.newline_map, &mut buf)?;
 		}
 
 		return Ok(());
 	}
 
-	let (space_char, tab_char, newline_char) = if !MAP_WHITESPACE.get_or_init(defaults::MAP_WHITESPACE) {
-		(' ', '\t', '\n')
+	let (space_char, tab_char, newline_char) = if opts.map_whitespace {
+		(opts.space_map, opts.tab_map, opts.newline_map)
 	} else {
-		(SPACE_MAP, TAB_MAP, NEWLINE_MAP)
+		(' ', '\t', '\n')
 	};
 
 	let mut space_count = 0;
 	for char in string.chars() {
 		if char != ' ' {
-			if space_count <= *crate::COMPRESSION_LEVEL.get_or_init(defaults::COMPRESS_LEVEL) {
+			if space_count <= opts.compress_level {
 			    for _ in 0..space_count {
 			        write_buf.write(char_to_bytes(space_char, &mut buf))?;
 			    }
@@ -226,7 +222,7 @@ pub fn print_string<W: Write>(write_buf: &mut W, string: &str) -> Result<(), std
 		}
 
 		space_count += 1;
-		if space_count == *crate::COMPRESSION_LEVEL.get_or_init(defaults::COMPRESS_LEVEL) {
+		if space_count == opts.compress_level {
 			write_buf.write(char_to_bytes(tab_char, &mut buf))?;
 			space_count = 0;
 		}

@@ -26,6 +26,8 @@ fn main() {
 }
 
 fn real_main() -> i32 {
+	let mut opts = xmlparse::ProgramOpts::default();
+
 	let app = build_cli();
 	let matches = app.get_matches();
 
@@ -35,21 +37,21 @@ fn real_main() -> i32 {
 	// }
 
 	if matches.is_present("No whitespace mapping") {
-		let _ = xmlparse::MAP_WHITESPACE.set(false);
-		let _ = xmlparse::COMPRESS_WHITESPACE.set(false);
+		opts.map_whitespace = false;
+		opts.compress_whitespace = false;
 	}
 
 	if matches.is_present("No whitespace compressing") {
-		let _ = xmlparse::COMPRESS_WHITESPACE.set(false);
+		opts.compress_whitespace = false;
 	}
 
 	if let Some(level) = matches.value_of("Compression level") {
 		let level: usize = level.parse().unwrap();
-		let _ = xmlparse::COMPRESSION_LEVEL.set(level);
+		opts.compress_level = level;
 	}
 
 	for file in matches.values_of("FILES").unwrap().collect::<Vec<_>>() {
-		xmlparse::print_nodes(file.to_owned());
+		xmlparse::print_nodes(file.to_owned(), &opts);
 	}
 
 	0
