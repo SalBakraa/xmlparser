@@ -69,25 +69,6 @@ mod ptr_conversions {
 			std::slice::from_raw_parts(ptr, len)
 		}
 	}
-
-	// TODO: Figuere how to efficiently implement this.
-	// fn _translate_whitespace(c: char) -> char {
-	//     if !DO_MAP_WHITESPACE.get_or_init(|| true) {
-	//         return c;
-	//     }
-
-	//     *WHITESPACE_MAP.get(&c).unwrap_or(&c)
-	// }
-
-	// TODO: Figuere how to efficiently implement this.
-	// fn _compress_whitespace(string: String) -> String {
-	//     if !DO_COMPRESS_WHITESPACE.get_or_init(|| true) {
-	//         return string;
-	//     }
-
-	//     let compressed_string = "␣".repeat(*COMPRESSION_LEVEL.get_or_init(|| 4));
-	//     string.replace(&compressed_string, &COMPRESSED_WHITESPACE.to_string())
-	// }
 }
 
 mod sax;
