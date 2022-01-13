@@ -16,6 +16,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+use crate::MAP_WHITESPACE;
+use crate::COMPRESS_WHITESPACE;
+
+use crate::defaults;
+
 use crate::bindings::{ self, xmlChar };
 use crate::bindings::xmlSAXHandler;
 use crate::bindings::xmlSAXHandlerPtr;
@@ -179,12 +184,14 @@ fn is_only_whitespace(string: &str) -> bool {
 }
 
 #[inline(always)]
-fn print_string<W: Write>(write_buf: &mut W, string: &str) {
-	if !crate::MAP_WHITESPACE.get_or_init(|| true) {
+pub fn print_string<W: Write>(write_buf: &mut W, string: &str) {
+	if !MAP_WHITESPACE.get_or_init(defaults::MAP_WHITESPACE)
+			&& !COMPRESS_WHITESPACE.get_or_init(defaults::COMPRESS_WHITESPACE) {
 		write_buf.write_all(string.as_bytes()).unwrap();
 		return;
 	}
 
+	// Shared buffer to translate a char to byte slice
 	let mut buf = [0; 4];
 	for char in string.chars() {
 		write_buf.write(match char {

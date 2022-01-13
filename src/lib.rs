@@ -16,6 +16,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+mod defaults {
+	pub static COMPRESS_LEVEL: fn() -> usize = || { 4 };
+	pub static MAP_WHITESPACE: fn() -> bool = || { true };
+	pub static COMPRESS_WHITESPACE: fn() -> bool = || { true };
+}
+
 mod bindings {
 	// Since libxml2 does not follow rust's coding conventions
 	#![allow(non_upper_case_globals)]
