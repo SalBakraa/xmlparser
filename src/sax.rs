@@ -197,6 +197,12 @@ pub fn print_string<W: Write>(write_buf: &mut W, string: &str, opts: &ProgramOpt
 		return Ok(());
 	}
 
+	// NOTE: The most efficient way for transliterating whitespace characters to UTF-8
+	//       characters is to do it right before printing the character. Doing this is
+	//       much cheaper than allocating a new buffer and transliterating into it.
+	//       Another approach I thought of is to modify the string right before storing
+	//       it into memory, but it would require modifying the libxml2 library and that
+	//       is too much of a hassle.
 	let (space_char, tab_char, newline_char) = if opts.map_whitespace {
 		(opts.space_map, opts.tab_map, opts.newline_map)
 	} else {
