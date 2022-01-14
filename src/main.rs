@@ -29,19 +29,6 @@ fn real_main() -> i32 {
 	let app = cli::build_cli();
 	let matches = app.get_matches();
 
-	if matches.is_present("Print Mappings") {
-		println!("{}{}{}", opts.space_map, opts.tab_map, opts.newline_map);
-		return 0;
-	}
-
-	if matches.is_present("Map Whitespace") {
-		opts.map_whitespace = true;
-	}
-
-	if matches.is_present("Compress Whitespace") {
-		opts.compress_whitespace = true;
-	}
-
 	if let Some(string) = matches.value_of("Space Character") {
 		opts.space_map = string.chars().nth(0).unwrap();
 	}
@@ -58,6 +45,19 @@ fn real_main() -> i32 {
 		opts.space_map = string.chars().nth(0).unwrap();
 		opts.tab_map = string.chars().nth(1).unwrap();
 		opts.newline_map = string.chars().nth(2).unwrap();
+	}
+
+	if matches.is_present("Print Mappings") {
+		println!("{}{}{}", opts.space_map, opts.tab_map, opts.newline_map);
+		return 0;
+	}
+
+	if matches.is_present("Map Whitespace") {
+		opts.map_whitespace = true;
+	}
+
+	if matches.is_present("Compress Whitespace") {
+		opts.compress_whitespace = true;
 	}
 
 	if let Some(level) = matches.value_of("Compression Level") {
