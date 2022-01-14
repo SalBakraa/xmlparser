@@ -42,6 +42,24 @@ fn real_main() -> i32 {
 		opts.compress_whitespace = true;
 	}
 
+	if let Some(string) = matches.value_of("Space Character") {
+		opts.space_map = string.chars().nth(0).unwrap();
+	}
+
+	if let Some(string) = matches.value_of("Tab Character") {
+		opts.tab_map = string.chars().nth(0).unwrap();
+	}
+
+	if let Some(string) = matches.value_of("Newline Character") {
+		opts.newline_map = string.chars().nth(0).unwrap();
+	}
+
+	if let Some(string) = matches.value_of("Whitespace Mapping") {
+		opts.space_map = string.chars().nth(0).unwrap();
+		opts.tab_map = string.chars().nth(1).unwrap();
+		opts.newline_map = string.chars().nth(2).unwrap();
+	}
+
 	if let Some(level) = matches.value_of("Compression Level") {
 		let level: usize = level.parse().unwrap();
 		opts.compress_level = level;

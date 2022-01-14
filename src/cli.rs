@@ -42,12 +42,48 @@ pub fn build_cli() -> App<'static, 'static> {
 				.display_order(2)
 		)
 		.arg(
+			Arg::with_name("Whitespace Mapping")
+				.short("w")
+				.long("whitespace-map")
+				.help("Specifies the whitespace characters are mapped to. \
+					  The characters must be in the following order <SPACE><TAB><LF>. \
+					  Overrides: `--space-char`, `--tab-char`, `--newline-char`")
+				.takes_value(true)
+				.value_name("MAP")
+				.overrides_with_all(&["space-char", "tab-char", "newline-char"])
+				.display_order(3)
+		)
+		.arg(
+			Arg::with_name("Space Character")
+				.long("space-char")
+				.help("Specifies the character <SPACE> is mapped to.")
+				.takes_value(true)
+				.value_name("CHAR")
+				.display_order(4)
+		)
+		.arg(
+			Arg::with_name("Tab Character")
+				.long("tab-char")
+				.help("Specifies the character <TAB> is mapped to.")
+				.takes_value(true)
+				.value_name("CHAR")
+				.display_order(5)
+		)
+		.arg(
+			Arg::with_name("Newline Character")
+				.long("newline-char")
+				.help("Specifies the character <LF> is mapped to.")
+				.takes_value(true)
+				.value_name("CHAR")
+				.display_order(6)
+		)
+		.arg(
 			Arg::with_name("Compress Whitespace")
 				.short("c")
 				.long("compress-whitespace")
 				.help("Compresses consecutive `space` characters to a `tab` character\
 					  according to the compression level.")
-				.display_order(3)
+				.display_order(7)
 		)
 		.arg(
 			Arg::with_name("Compression Level")
@@ -58,14 +94,14 @@ pub fn build_cli() -> App<'static, 'static> {
 				.takes_value(true)
 				.value_name("LEVEL")
 				.allow_hyphen_values(true)
-				.display_order(4)
+				.display_order(8)
 		)
 		.arg(
 			Arg::with_name("FILES")
 				.required_unless("Print Mappings")
 				.help("XML files to read")
 				.multiple(true)
-				.display_order(5)
+				.display_order(9)
 		)
 		.after_help(
 			"EXAMPLES: \n\
