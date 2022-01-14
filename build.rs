@@ -10,7 +10,6 @@ use cli::build_cli;
 #[cfg(feature="pkgbuild")]
 use pkgbuild::write_pkgbuild;
 
-use std::env;
 use std::fs;
 use std::path::PathBuf;
 use std::path::Path;
@@ -23,7 +22,7 @@ static HEADERS_DIRECTORY: &str = "src/c/include";
 static BUILD_MODULES: &str = "build";
 
 fn main() {
-	let out_path = env::var("OUT_DIR").unwrap();
+	let out_path = std::env::var("OUT_DIR").unwrap();
 
 	// Use 'target' as the target dir since there is no way to know if
 	// the user changed it
