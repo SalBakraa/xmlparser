@@ -52,17 +52,9 @@ fn real_main() -> i32 {
 		return 0;
 	}
 
-	if matches.is_present("Map Whitespace") {
-		opts.map_whitespace = true;
-	}
-
-	if matches.is_present("Compress Whitespace") {
-		opts.compress_whitespace = true;
-	}
-
-	if matches.is_present("Keep All Whitespace") {
-		opts.keep_all_whitespace = true;
-	}
+	opts.map_whitespace = matches.is_present("Map Whitespace");
+	opts.compress_whitespace = matches.is_present("Compress Whitespace");
+	opts.keep_all_whitespace = matches.is_present("Keep All Whitespace");
 
 	if let Some(level) = matches.value_of("Compression Level") {
 		let level: usize = level.parse().unwrap();
