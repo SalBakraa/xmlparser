@@ -30,8 +30,8 @@ impl Default for ProgramOpts {
 	fn default() -> Self {
 		ProgramOpts {
 			map_whitespace: false,
-			tab_map: '→',
-			space_map: '␣',
+			tab_map: '»',
+			space_map: '·',
 			newline_map: '↵',
 
 			compress_whitespace: false,
