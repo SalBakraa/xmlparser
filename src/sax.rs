@@ -135,7 +135,7 @@ extern fn sax_end_element(user_data_ptr: *mut c_void, name: *const xmlChar) {
 extern fn sax_characters(user_data_ptr: *mut c_void, chars: *const xmlChar, len: i32) {
 	let user_data = deref_mut_void_ptr::<ParserData>(user_data_ptr);
 	let chars = str_from_xmlchar(chars, len as isize);
-	if is_only_whitespace(&chars) {
+	if !user_data.opts().keep_all_whitespace && is_only_whitespace(&chars) {
 		return;
 	}
 

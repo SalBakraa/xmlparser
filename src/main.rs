@@ -60,6 +60,10 @@ fn real_main() -> i32 {
 		opts.compress_whitespace = true;
 	}
 
+	if matches.is_present("Keep All Whitespace") {
+		opts.keep_all_whitespace = true;
+	}
+
 	if let Some(level) = matches.value_of("Compression Level") {
 		let level: usize = level.parse().unwrap();
 		opts.compress_level = level;

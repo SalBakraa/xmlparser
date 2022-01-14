@@ -17,6 +17,8 @@
  */
 
 pub struct ProgramOpts {
+	pub keep_all_whitespace: bool,
+
 	pub map_whitespace: bool,
 	pub tab_map: char,
 	pub space_map: char,
@@ -29,6 +31,8 @@ pub struct ProgramOpts {
 impl Default for ProgramOpts {
 	fn default() -> Self {
 		ProgramOpts {
+			keep_all_whitespace: false,
+
 			map_whitespace: false,
 			tab_map: '»',
 			space_map: '·',

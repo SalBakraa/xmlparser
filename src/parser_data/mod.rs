@@ -48,6 +48,10 @@ impl<'a> ParserData<'a> {
 		(self.opts, &mut self.tags, &mut self.stdout)
 	}
 
+	pub fn opts(&mut self) -> &ProgramOpts {
+		self.opts
+	}
+
 	pub fn last_tag(&self) -> Option<&XmlTag<'a>> {
 		self.tags.0.last()
 	}

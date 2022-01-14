@@ -97,11 +97,18 @@ pub fn build_cli() -> App<'static, 'static> {
 				.display_order(8)
 		)
 		.arg(
+			Arg::with_name("Keep All Whitespace")
+				.short("k")
+				.long("keep-all-whitespace")
+				.help("Keep all the empty space between the tags in the final output.")
+				.display_order(9)
+		)
+		.arg(
 			Arg::with_name("FILES")
 				.required_unless("Print Mappings")
 				.help("XML files to read")
 				.multiple(true)
-				.display_order(9)
+				.display_order(10)
 		)
 		.after_help(
 			"EXAMPLES: \n\
