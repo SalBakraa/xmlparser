@@ -6,7 +6,7 @@ pkgname='xmlparse'
 pkgver='0.10.0'
 pkgrel=1
 pkgdesc='An extensible xml processing tool that converts xml data to a line oriented format similar to that of xpath.'
-url='https://github.com/SalBakraa/xmlparse'
+url='https://gitlab.com/SalBakraa/xmlparse'
 arch=('any')
 license=('GPL-3.0-or-later')
 provides=("$pkgname")
@@ -17,36 +17,36 @@ makedepends=('cargo' 'git')
 sha256sums=('SKIP')
 
 prepare() {
-    cd "$srcdir/$pkgname-$pkgver"
+	cd "$srcdir/$pkgname-$pkgver"
 
-    cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+	cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
 }
 
 build() {
-    cd "$srcdir/$pkgname-$pkgver"
+	cd "$srcdir/$pkgname-$pkgver"
 
-    export RUSTUP_TOOLCHAIN=stable
-    export CARGO_TARGET_DIR=target
-    cargo build --frozen --release
+	export RUSTUP_TOOLCHAIN=stable
+	export CARGO_TARGET_DIR=target
+	cargo build --frozen --release
 }
 
 check() {
-    cd "$srcdir/$pkgname-$pkgver"
+	cd "$srcdir/$pkgname-$pkgver"
 
-    export RUSTUP_TOOLCHAIN=stable
-    export CARGO_TARGET_DIR=test
-    cargo test --frozen --release
+	export RUSTUP_TOOLCHAIN=stable
+	export CARGO_TARGET_DIR=test
+	cargo test --frozen --release
 }
 
 package() {
-    cd "$srcdir/$pkgname-$pkgver"
-    local OUT_DIR="$(< target/out_dir)"
+	cd "$srcdir/$pkgname-$pkgver"
+	local OUT_DIR="$(< target/out_dir)"
 
-    install -Dm755 "target/release/$pkgname" "$pkgdir/usr/bin/$pkgname"
+	install -Dm755 "target/release/$pkgname" "$pkgdir/usr/bin/$pkgname"
 
-    install -Dm644 "$OUT_DIR/_$pkgname" "$pkgdir/usr/share/zsh/site-functions/_$pkgname"
-    install -Dm644 "$OUT_DIR/$pkgname.bash" "$pkgdir/usr/share/bash-completion/completions/$pkgname"
-    install -Dm644 "$OUT_DIR/$pkgname.fish" "$pkgdir/usr/share/fish/vendor_completions.d/$pkgname.fish"
+	install -Dm644 "$OUT_DIR/_$pkgname" "$pkgdir/usr/share/zsh/site-functions/_$pkgname"
+	install -Dm644 "$OUT_DIR/$pkgname.bash" "$pkgdir/usr/share/bash-completion/completions/$pkgname"
+	install -Dm644 "$OUT_DIR/$pkgname.fish" "$pkgdir/usr/share/fish/vendor_completions.d/$pkgname.fish"
 
-    install -Dm644 "LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+	install -Dm644 "LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }
