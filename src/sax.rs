@@ -206,7 +206,7 @@ pub fn print_string<W: Write>(write_buf: &mut W, string: &str, opts: &ProgramOpt
 	let mut space_count = 0;
 	for char in string.chars() {
 		if char != ' ' {
-			if space_count <= opts.compress_level {
+			if space_count < opts.compress_level {
 			    for _ in 0..space_count {
 			        write_buf.write(char_to_bytes(space_char, &mut buf))?;
 			    }
