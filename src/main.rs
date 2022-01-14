@@ -29,21 +29,20 @@ fn real_main() -> i32 {
 	let app = cli::build_cli();
 	let matches = app.get_matches();
 
-	// if matches.is_present("print whitespace map") {
-	// 	xmlparse::print_whitespace_mappings();
-	// 	return 0;
-	// }
-
-	if matches.is_present("No whitespace mapping") {
-		opts.map_whitespace = false;
-		opts.compress_whitespace = false;
+	if matches.is_present("Print Mappings") {
+		println!("{}{}{}", opts.space_map, opts.tab_map, opts.newline_map);
+		return 0;
 	}
 
-	if matches.is_present("No whitespace compressing") {
-		opts.compress_whitespace = false;
+	if matches.is_present("Map Whitespace") {
+		opts.map_whitespace = true;
 	}
 
-	if let Some(level) = matches.value_of("Compression level") {
+	if matches.is_present("Compress Whitespace") {
+		opts.compress_whitespace = true;
+	}
+
+	if let Some(level) = matches.value_of("Compression Level") {
 		let level: usize = level.parse().unwrap();
 		opts.compress_level = level;
 	}

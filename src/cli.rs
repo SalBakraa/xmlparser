@@ -27,51 +27,52 @@ pub fn build_cli() -> App<'static, 'static> {
 		.author(crate_authors!())
 		.about(crate_description!())
 		.arg(
-			Arg::with_name("print whitespace map")
+			Arg::with_name("Print Mappings")
 				.short("p")
-				.long("whitespace-maps")
-				.help("Print the characters used to visualize/compress whitespace \
-					  charcters in the following order <SPACE><\\t><\\n>|<COMPRESSOR> and exits")
+				.long("print-mappings")
+				.help("Print the characters used to visualize whitespace characters \
+					  in the following order <SPACE><TAB><LF> and exits.")
 				.display_order(1)
 		)
 		.arg(
-			Arg::with_name("No whitespace mapping")
-				.short("k")
-				.long("keep-whitespace")
-				.help("Prevents whitespace from being mapped to display charcters. Assumes --no-compress")
+			Arg::with_name("Map Whitespace")
+				.short("m")
+				.long("map-whitespace")
+				.help("Transliterates whitespace characters to printable characters.")
 				.display_order(2)
 		)
 		.arg(
-			Arg::with_name("No whitespace compressing")
-				.long("no-compress")
-				.help("Prevents whitespace from being compressed")
+			Arg::with_name("Compress Whitespace")
+				.short("c")
+				.long("compress-whitespace")
+				.help("Compresses consecutive `space` characters to a `tab` character\
+					  according to the compression level.")
 				.display_order(3)
 		)
 		.arg(
-			Arg::with_name("Compression level")
-				.short("c")
+			Arg::with_name("Compression Level")
+				.short("l")
 				.long("compress-level")
 				.help("Specifies the number consecutive spaces compressed to a \
 					  single character. Default: 4 spaces")
 				.takes_value(true)
+				.value_name("LEVEL")
 				.allow_hyphen_values(true)
 				.display_order(4)
 		)
 		.arg(
 			Arg::with_name("FILES")
-				.required_unless("print whitespace map")
+				.required_unless("Print Mappings")
 				.help("XML files to read")
-				.index(1)
 				.multiple(true)
+				.display_order(5)
 		)
 		.after_help(
 			"EXAMPLES: \n\
-			\tCURRENTLY BROKEN BEHAVIOUR. WHITESPACE IS STILL MAINTANED. \n\
 			\tIf you want to keep visual whitespace while text processing; You can use sed to \n\
 			\tremove the visualizations as the last step of text processing. \n\
 			\n\
-			\t$ MAPS=\"$(xmlparse --whitespace-maps)\" \n\
-			\t$ xmlparse foo.xml | <Your text processing here> | sed -e \
-			'y/${MAPS%|*}/ \\t\\n' -e 's/${MAPS#*|}/    /g'"
+			\t$ MAPS=\"$(xmlparse  --print-mappings)\" \n\
+			\t$ xmlparse -m foo.xml | <Your text processing here> | sed \"y/$MAPS/ \\t\\n/\""
 		)
 }
